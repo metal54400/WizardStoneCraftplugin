@@ -1,0 +1,48 @@
+name: WizardStoneCraft
+version: '14.1.4'
+main: simpleRep.ReputationPlugin
+api-version: '1.21'
+
+description: Plugin Principale de WizardStoneCraft
+author: Metal54400 and MetalGames - studio
+website: http://5.48.143.126:25565
+softdepend:
+  - EssentialsX
+  - Luckperms
+  - PlaceHolderAPI
+
+commands:
+  repreload:
+    description: Ajouter des points de réputation à un joueur.
+    usage: /repreload
+    aliases: reputationreload
+
+  repadd:
+    description: Ajouter des points de réputation à un joueur.
+    usage: /repadd <player> <amount>
+    aliases: reputationadd
+  repsubtract:
+    description: Soustraire des points de réputation à un joueur.
+    usage: /repsubtract <player> <amount>
+  reptop:
+    description: Afficher le top 5 des réputations.
+    usage: /reptop
+    aliases: reputationTop
+  rep:
+    description: Afficher les informations de réputation d'un joueur.
+    usage: /rep <player>
+    aliases: reputation
+
+  rephelp:
+    description: aide sur la reputation
+    usage: /rephelp
+    aliases: reputationhelp
+
+  tabreload:
+    description: Reload the tablist configuration
+    usage: /tabreload
+
+  rephighlight:
+    description: Mettre en évidence la réputation d'un joueur.
+    usage: /rephighlight <player>
+
