@@ -7,9 +7,7 @@ description: Plugin Principale de WizardStoneCraft
 author: Metal54400 and MetalGames - studio
 website: http://5.48.143.126:25565
 softdepend:
-  - EssentialsX
-  - Luckperms
-  - PlaceHolderAPI
+
 
 commands:
   repreload:
