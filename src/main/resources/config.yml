@@ -1,0 +1,30 @@
+
+minimum-reputation: -500
+maximum-reputation: 500
+points-kill: -4
+points-join: 8
+
+tablist:
+  header: "§aBienvenue sur le serveur &6MonServeur"
+  footer: "§6Amusez-vous bien sur notre serveur ! &aJoueurs en ligne : %players%"
+
+reputation-status:
+  honorable: "§dHonorable"
+  good: "§aBonne"
+  neutral: "§7Neutre"
+  dangerous: "§6Dangereux"
+  bad: "§cMauvaise"
+  horrible: "§4Horrible"
+
+
+reputation-prefix:
+    honorable: "§dΩ"
+    good: "§aΩ"
+    neutral: "§7Ω"
+    dangerous: "§6Ω"
+    bad: "§cΩ"
+    horrible: "§4Ω"
+
+messages:
+  reload_success: "§7[§e?§7] Configuration et messages rechargés avec succès!"
+  noperm: "§7[§e?§7] §cVous n'avez pas la permission d'utiliser cette commande"
