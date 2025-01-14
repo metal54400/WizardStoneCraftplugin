@@ -7,6 +7,7 @@ import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -14,8 +15,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -23,8 +28,12 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.io.*;
 import java.util.*;
 
-public class ReputationPlugin extends JavaPlugin implements Listener {
+
+
+public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener {
     final Map<UUID, Integer> reputation = new HashMap<>();
+    private final Map<Player, Integer> playerReputations = new HashMap<>(); // Stocke la réputation des joueurs
+    private final Map<Player, Player> selectedPlayers = new HashMap<>(); // Stocke quel joueur est sélectionné par quel admin
     public int MIN_REP;
     public  int MAX_REP;
     private int pointsKill;
@@ -35,11 +44,14 @@ public class ReputationPlugin extends JavaPlugin implements Listener {
     private FileConfiguration config;
     private LuckPerms luckPerms;
 
-
+    @Override
+    public void onLoad() {
+        getLogger().info("§7[§e?§7]§a ReputationPlugin chargé !");
+    }
 
     @Override
     public void onEnable() {
-        getLogger().info("ReputationPlugin activé !");
+        getLogger().info("§7[§e?§7]§a ReputationPlugin activé !");
         saveDefaultConfig();
         loadConfiguration();
         loadMessages();
@@ -54,29 +66,110 @@ public class ReputationPlugin extends JavaPlugin implements Listener {
         RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
         if (provider != null) {
             luckPerms = provider.getProvider();
-            getLogger().info("LuckPerms API détectée et connectée !");
+            getLogger().info("§7[§e?§7]§a LuckPerms API détectée et connectée !");
         } else {
-            getLogger().warning("LuckPerms API non détectée !");
+            getLogger().warning("§7[§e?§7]§c LuckPerms API non détectée !");
         }
+
 
 
         new TablistUpdater(this).runTaskTimer(this, 1000000000, 1000000000);
 
+        Bukkit.getPluginManager().registerEvents(this, this);
         getCommand("repadd").setExecutor(new ManageRepCommand());
         getCommand("repsubtract").setExecutor(new ManageRepCommand());
-        getCommand("repmenu").setExecutor(new RepMenuCommand(this));
         getCommand("reptop").setExecutor(new ReptopCommand());
         getCommand("rep").setExecutor(new ReputationCommand());
         getCommand("rephighlight").setExecutor(new RepHighlightCommand());
         getCommand("rephelp").setExecutor(new RepHelpCommand());
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
+
+
+
+        // Créer une instance de RepMenu et l'enregistrer en tant qu'écouteur d'événements
         this.getCommand("tabreload").setExecutor(new UpdateTablistCommand(this));
 
     }
 
     @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (label.equalsIgnoreCase("repmenu") && sender instanceof Player) {
+            Player player = (Player) sender;
+
+            // Vérifie si le joueur est un administrateur
+            if (player.hasPermission("reputation.admin")) {
+                openPlayerListMenu(player);
+                return true;
+            } else {
+                player.sendMessage("§7[§e?§7] §cVous n'avez pas la permission d'utiliser cette commande.");
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Ouvre le menu de la liste des joueurs.
+     */
+    public void openPlayerListMenu(Player admin) {
+        Inventory inventory = Bukkit.createInventory(null, 27, "Liste des joueurs");
+
+        // Ajoute la tête de chaque joueur en ligne
+        for (Player target : Bukkit.getOnlinePlayers()) {
+            ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
+
+            ItemMeta meta = playerHead.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName("§e" + target.getName());
+                playerHead.setItemMeta(meta);
+            }
+            inventory.addItem(playerHead);
+        }
+
+        admin.openInventory(inventory);
+    }
+
+    /**
+     * Ouvre le menu de modification de réputation.
+     */
+    public void openReputationEditMenu(Player admin, Player target) {
+        Inventory inventory = Bukkit.createInventory(null, 9, "Modifier Réputation : " + target.getName());
+
+        // Item pour ajouter des points
+        ItemStack addReputation = new ItemStack(Material.GREEN_DYE);
+        ItemMeta addMeta = addReputation.getItemMeta();
+        if (addMeta != null) {
+            addMeta.setDisplayName("§7[§e?§7]§a Ajouter 10 points");
+            addReputation.setItemMeta(addMeta);
+        }
+
+        // Item pour retirer des points
+        ItemStack removeReputation = new ItemStack(Material.RED_DYE);
+        ItemMeta removeMeta = removeReputation.getItemMeta();
+        if (removeMeta != null) {
+            removeMeta.setDisplayName("§7[§e?§7]§c Retirer 10 points");
+            removeReputation.setItemMeta(removeMeta);
+        }
+
+        // Item pour afficher la réputation actuelle
+        ItemStack currentReputation = new ItemStack(Material.PAPER);
+        ItemMeta currentMeta = currentReputation.getItemMeta();
+        if (currentMeta != null) {
+            int reputation = playerReputations.getOrDefault(target, 0);
+            currentMeta.setDisplayName("§7[§e?§7]§a Réputation actuelle : " + reputation);
+            currentReputation.setItemMeta(currentMeta);
+        }
+
+        inventory.setItem(3, addReputation);
+        inventory.setItem(5, removeReputation);
+        inventory.setItem(4, currentReputation);
+
+        admin.openInventory(inventory);
+        selectedPlayers.put(admin, target); // Stocke quel joueur est sélectionné
+    }
+
+    @Override
     public void onDisable() {
-        getLogger().info("ReputationPlugin désactivé !");
+        getLogger().info("§7[§e?§7]§c ReputationPlugin désactivé !");
     }
 
     private void loadConfiguration() {
@@ -144,6 +237,65 @@ public class ReputationPlugin extends JavaPlugin implements Listener {
         }
     }
 
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        Player player = (Player) event.getWhoClicked();
+        String title = event.getView().getTitle();
+
+        // Gestion du menu de la liste des joueurs
+        if (title.equals("Liste des joueurs")) {
+            event.setCancelled(true);
+
+            if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.PLAYER_HEAD) {
+                String targetName = event.getCurrentItem().getItemMeta().getDisplayName().substring(2); // Retire le préfixe "§e"
+                Player target = Bukkit.getPlayerExact(targetName);
+
+                if (target != null) {
+                    openReputationEditMenu(player, target); // Ouvre le menu de modification pour ce joueur
+                } else {
+                    player.sendMessage("§cLe joueur " + targetName + " n'est pas en ligne.");
+                }
+            }
+        }
+
+        // Gestion du menu de modification de réputation
+        else if (title.startsWith("Modifier Réputation")) {
+            event.setCancelled(true);
+
+            if (event.getCurrentItem() != null) {
+                Player target = selectedPlayers.get(player); // Récupère le joueur sélectionné
+
+                if (target != null) {
+                    switch (event.getCurrentItem().getType()) {
+                        case GREEN_DYE -> {
+                            // Exécute la commande /repadd pour ajouter 10 points
+                            String command = "repadd " + target.getName();
+                            player.performCommand(command); // Le joueur exécute la commande
+                            player.sendMessage("§aCommande exécutée : " + command);
+                            openReputationEditMenu(player, target); // Rafraîchit le menu
+                        }
+                        case RED_DYE -> {
+                            // Exécute la commande /repsubtract pour retirer 10 points
+                            String command = "repsubtract " + target.getName();
+                            player.performCommand(command); // Le joueur exécute la commande
+                            player.sendMessage("§cCommande exécutée : " + command);
+                            openReputationEditMenu(player, target); // Rafraîchit le menu
+                        }
+                        case PAPER -> {
+                            // Affiche la réputation actuelle (clic inutile)
+                            player.sendMessage("§eLa réputation actuelle de " + target.getName() + " est : " +
+                                    playerReputations.getOrDefault(target, 0));
+                        }
+                    }
+                } else {
+                    player.sendMessage("§cErreur : aucun joueur sélectionné.");
+                }
+            }
+        }
+    }
+
+
+
     private void updateTabList(Player player) {
         UUID playerId = player.getUniqueId();
         int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
@@ -160,6 +312,8 @@ public class ReputationPlugin extends JavaPlugin implements Listener {
         String prefix = getColoredReputationPrefix(rep);
         String gradePrefix = getLuckPermsPrefix(player);
         event.setFormat(prefix + " " + gradePrefix + " " + ChatColor.RESET + "<%1$s> %2$s");
+        Player players = event.getPlayer();
+
     }
 
     @EventHandler

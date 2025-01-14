@@ -2,8 +2,8 @@ plugins {
     id 'java'
 }
 
-group = 'fr.WizardGames'
-version = '0.0.2'
+group = 'simpleRep'
+version = '0.0.3'
 
 repositories {
     mavenCentral()
