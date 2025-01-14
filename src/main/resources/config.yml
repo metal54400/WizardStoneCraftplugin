@@ -28,3 +28,4 @@ reputation-prefix:
 messages:
   reload_success: "§7[§e?§7] Configuration et messages rechargés avec succès!"
   noperm: "§7[§e?§7] §cVous n'avez pas la permission d'utiliser cette commande"
+

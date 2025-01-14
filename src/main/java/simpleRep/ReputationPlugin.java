@@ -1,5 +1,7 @@
 package simpleRep;
 
+
+
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
@@ -19,15 +21,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ReputationPlugin extends JavaPlugin implements Listener {
-    private final Map<UUID, Integer> reputation = new HashMap<>();
-    private int MIN_REP;
-    private int MAX_REP;
+    final Map<UUID, Integer> reputation = new HashMap<>();
+    public int MIN_REP;
+    public  int MAX_REP;
     private int pointsKill;
     private int pointsJoin;
     private FileConfiguration messages;
@@ -38,8 +37,6 @@ public class ReputationPlugin extends JavaPlugin implements Listener {
 
 
 
-
-
     @Override
     public void onEnable() {
         getLogger().info("ReputationPlugin activé !");
@@ -47,6 +44,7 @@ public class ReputationPlugin extends JavaPlugin implements Listener {
         loadConfiguration();
         loadMessages();
         config = getConfig();
+        ReputationPlugin plugin = this;
 
 
 
@@ -61,11 +59,12 @@ public class ReputationPlugin extends JavaPlugin implements Listener {
             getLogger().warning("LuckPerms API non détectée !");
         }
 
+
         new TablistUpdater(this).runTaskTimer(this, 1000000000, 1000000000);
 
-        Bukkit.getPluginManager().registerEvents(this, this);
         getCommand("repadd").setExecutor(new ManageRepCommand());
         getCommand("repsubtract").setExecutor(new ManageRepCommand());
+        getCommand("repmenu").setExecutor(new RepMenuCommand(this));
         getCommand("reptop").setExecutor(new ReptopCommand());
         getCommand("rep").setExecutor(new ReputationCommand());
         getCommand("rephighlight").setExecutor(new RepHighlightCommand());
@@ -105,7 +104,7 @@ public class ReputationPlugin extends JavaPlugin implements Listener {
     }
 
 
-    private void savePlayerReputation(UUID playerId, int rep) {
+    void savePlayerReputation(UUID playerId, int rep) {
         File playerFile = new File(getDataFolder(), playerId + ".dat");
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(playerFile))) {
             oos.writeObject(rep);
@@ -116,7 +115,7 @@ public class ReputationPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    private int loadPlayerReputation(UUID playerId) {
+    int loadPlayerReputation(UUID playerId) {
         File playerFile = new File(getDataFolder(), playerId + ".dat");
         if (!playerFile.exists()) {
             getLogger().warning("Fichier " + playerId + ".dat introuvable. Initialisation de la réputation par défaut.");

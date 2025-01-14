@@ -7,3 +7,6 @@ usage: "&7[&e?&7] Usage: &7/%command% <player> <amount>"
 rep_modified: "&7[&e?&7] Modifié la réputation de %player% de %amount% points."
 reputation_status: "&7[&e?&7] %player% a %reputation% points de réputation. Statut: %status%"
 top_reputations: "&7[&e?&7] Top 5 des réputations:"
+
+
+
