@@ -2,6 +2,7 @@ package fr.WizardStoneCraft;
 
 
 
+import fr.WizardStoneCraft.Commands.HomeCommand;
 import fr.WizardStoneCraft.Commands.RepHelpCommand;
 import fr.WizardStoneCraft.Commands.RepReloadCommand;
 import fr.WizardStoneCraft.Commands.SetHomeCommand;
@@ -10,6 +11,7 @@ import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -93,8 +95,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("rephighlight").setExecutor(new RepHighlightCommand());
         getCommand("rephelp").setExecutor(new RepHelpCommand());
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
-         // Chargez les données de réputation
         getCommand("sethome").setExecutor(new SetHomeCommand(reputation));
+        getCommand("home").setExecutor(new HomeCommand((Map<UUID, Location>) this));
 
 
 

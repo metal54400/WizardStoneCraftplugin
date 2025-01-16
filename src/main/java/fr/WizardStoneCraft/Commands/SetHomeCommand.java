@@ -34,9 +34,9 @@ public class SetHomeCommand implements CommandExecutor {
         // Vérifie la réputation du joueur
         if (playerReputation <= MIN_REPUTATION) {
             if (playerReputation <= -100) {
-                player.sendMessage("§cVotre réputation est §4horrible§c. Vous n'avez pas accès à cette commande.");
+                player.sendMessage("§7[§e?§7]Votre réputation est §4horrible§7. Vous n'avez pas accès à cette commande.");
             } else {
-                player.sendMessage("§cVotre réputation est §6mauvaise§c. Vous n'avez pas accès à cette commande.");
+                player.sendMessage("§7[§e?§7] Votre réputation est §6mauvaise§7. Vous n'avez pas accès à cette commande.");
             }
             return true;
         }
@@ -44,7 +44,7 @@ public class SetHomeCommand implements CommandExecutor {
         // Définit le home pour le joueur
         Location homeLocation = player.getLocation();
         playerHomes.put(playerId, homeLocation);
-        player.sendMessage("§aVotre home a été défini à votre position actuelle : §e" +
+        player.sendMessage("§7[§e?§7] Votre home a été défini à votre position actuelle : §e" +
                 homeLocation.getBlockX() + ", " +
                 homeLocation.getBlockY() + ", " +
                 homeLocation.getBlockZ() + ".");
