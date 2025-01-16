@@ -1,7 +1,10 @@
-package simpleRep;
+package fr.WizardStoneCraft;
 
 
 
+import fr.WizardStoneCraft.Commands.RepHelpCommand;
+import fr.WizardStoneCraft.Commands.RepReloadCommand;
+import fr.WizardStoneCraft.Commands.SetHomeCommand;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
@@ -30,14 +33,17 @@ import java.util.*;
 
 
 
-public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener {
+public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener {
     final Map<UUID, Integer> reputation = new HashMap<>();
+    private final Map<UUID, Map<UUID, Long>> killHistory = new HashMap<>();
     private final Map<Player, Integer> playerReputations = new HashMap<>(); // Stocke la réputation des joueurs
-    private final Map<Player, Player> selectedPlayers = new HashMap<>(); // Stocke quel joueur est sélectionné par quel admin
+    private final Map<Player, Player> selectedPlayers = new HashMap<>();
     public int MIN_REP;
     public  int MAX_REP;
     private int pointsKill;
     private int pointsJoin;
+    public int DixPoint;
+    public int MoinDixPoint;
     private FileConfiguration messages;
     private String tabPrefix;
     private String chatPrefix;
@@ -56,7 +62,7 @@ public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener
         loadConfiguration();
         loadMessages();
         config = getConfig();
-        ReputationPlugin plugin = this;
+        WizardStoneCraft plugin = this;
 
 
 
@@ -83,6 +89,8 @@ public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener
         getCommand("rephighlight").setExecutor(new RepHighlightCommand());
         getCommand("rephelp").setExecutor(new RepHelpCommand());
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
+        Map<UUID, Integer> reputation = loadReputationData(); // Chargez les données de réputation
+        getCommand("sethome").setExecutor(new SetHomeCommand(reputation));
 
 
 
@@ -110,8 +118,13 @@ public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener
     /**
      * Ouvre le menu de la liste des joueurs.
      */
+    /**
+     * Ouvre le menu de la liste des joueurs pour l'administrateur.
+     */
     public void openPlayerListMenu(Player admin) {
-        Inventory inventory = Bukkit.createInventory(null, 27, "Liste des joueurs");
+        // Taille ajustée à un multiple de 9 (par exemple : 54 slots)
+        int inventorySize = 54;
+        Inventory inventory = Bukkit.createInventory(null, inventorySize, "Liste des joueurs");
 
         // Ajoute la tête de chaque joueur en ligne
         for (Player target : Bukkit.getOnlinePlayers()) {
@@ -119,26 +132,30 @@ public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener
 
             ItemMeta meta = playerHead.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName("§e" + target.getName());
+                meta.setDisplayName("§e" + target.getName()); // Nom du joueur avec couleur
                 playerHead.setItemMeta(meta);
             }
+
+            // Ajoute la tête du joueur dans l'inventaire
             inventory.addItem(playerHead);
         }
 
+        // Ouvre l'inventaire pour l'administrateur
         admin.openInventory(inventory);
     }
 
     /**
-     * Ouvre le menu de modification de réputation.
+     * Ouvre le menu de modification de réputation pour un joueur cible.
      */
     public void openReputationEditMenu(Player admin, Player target) {
+        // Taille ajustée (9 slots suffisent pour ce menu)
         Inventory inventory = Bukkit.createInventory(null, 9, "Modifier Réputation : " + target.getName());
 
         // Item pour ajouter des points
         ItemStack addReputation = new ItemStack(Material.GREEN_DYE);
         ItemMeta addMeta = addReputation.getItemMeta();
         if (addMeta != null) {
-            addMeta.setDisplayName("§7[§e?§7]§a Ajouter 10 points");
+            addMeta.setDisplayName("§aAjouter 10 points"); // Nom personnalisé
             addReputation.setItemMeta(addMeta);
         }
 
@@ -146,7 +163,7 @@ public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener
         ItemStack removeReputation = new ItemStack(Material.RED_DYE);
         ItemMeta removeMeta = removeReputation.getItemMeta();
         if (removeMeta != null) {
-            removeMeta.setDisplayName("§7[§e?§7]§c Retirer 10 points");
+            removeMeta.setDisplayName("§cRetirer 10 points"); // Nom personnalisé
             removeReputation.setItemMeta(removeMeta);
         }
 
@@ -154,17 +171,21 @@ public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener
         ItemStack currentReputation = new ItemStack(Material.PAPER);
         ItemMeta currentMeta = currentReputation.getItemMeta();
         if (currentMeta != null) {
-            int reputation = playerReputations.getOrDefault(target, 0);
-            currentMeta.setDisplayName("§7[§e?§7]§a Réputation actuelle : " + reputation);
+            int reputation = playerReputations.getOrDefault(target, 0); // Récupère la réputation ou 0 par défaut
+            currentMeta.setDisplayName("§aRéputation actuelle : " + reputation); // Affiche la réputation
             currentReputation.setItemMeta(currentMeta);
         }
 
-        inventory.setItem(3, addReputation);
-        inventory.setItem(5, removeReputation);
-        inventory.setItem(4, currentReputation);
+        // Ajoute les items dans le menu
+        inventory.setItem(3, addReputation);      // Slot 3 : Ajouter des points
+        inventory.setItem(5, removeReputation);  // Slot 5 : Retirer des points
+        inventory.setItem(4, currentReputation); // Slot 4 : Réputation actuelle
 
+        // Ouvre le menu pour l'administrateur
         admin.openInventory(inventory);
-        selectedPlayers.put(admin, target); // Stocke quel joueur est sélectionné
+
+        // Stocke le joueur cible dans la map `selectedPlayers`
+        selectedPlayers.put(admin, target);
     }
 
     @Override
@@ -176,6 +197,8 @@ public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener
         MIN_REP = getConfig().getInt("minimum-reputation");
         MAX_REP = getConfig().getInt("maximum-reputation");
         pointsKill = getConfig().getInt("points-kill");
+        DixPoint = getConfig().getInt("dixpoint");
+        MoinDixPoint = getConfig().getInt("Moindixpoint");
         pointsJoin = getConfig().getInt("points-join");
     }
 
@@ -222,77 +245,135 @@ public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener
             return 0; // Default reputation in case of error
         }
     }
-
-    @EventHandler
-    public void onPlayerKill(PlayerDeathEvent event) {
-        Player victim = event.getEntity();
-        Player killer = victim.getKiller();
-        if (killer != null) {
-            UUID killerId = killer.getUniqueId();
-            int newRep = reputation.getOrDefault(killerId, loadPlayerReputation(killerId)) + pointsKill;
-            reputation.put(killerId, Math.max(newRep, MIN_REP));
-            killer.sendMessage(getMessage("reputation_lost"));
-            savePlayerReputation(killerId, Math.max(newRep, MIN_REP));
-            updateTablist(killer);
-        }
-    }
-
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
         String title = event.getView().getTitle();
 
+        // Vérifie si un item est cliqué
+        if (event.getCurrentItem() == null || event.getCurrentItem().getItemMeta() == null) {
+            return;
+        }
+
         // Gestion du menu de la liste des joueurs
         if (title.equals("Liste des joueurs")) {
-            event.setCancelled(true);
+            event.setCancelled(true); // Empêche de prendre des objets
 
-            if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.PLAYER_HEAD) {
-                String targetName = event.getCurrentItem().getItemMeta().getDisplayName().substring(2); // Retire le préfixe "§e"
+            if (event.getCurrentItem().getType() == Material.PLAYER_HEAD) {
+                // Récupère le nom du joueur affiché
+                String targetName = event.getCurrentItem().getItemMeta().getDisplayName();
+                if (targetName.length() > 2) {
+                    targetName = targetName.substring(2); // Retire le préfixe "§e"
+                } else {
+                    player.sendMessage("§7[§e?§7]§c Nom de joueur invalide.");
+                    return;
+                }
+
+                // Récupère le joueur correspondant
                 Player target = Bukkit.getPlayerExact(targetName);
-
                 if (target != null) {
                     openReputationEditMenu(player, target); // Ouvre le menu de modification pour ce joueur
                 } else {
-                    player.sendMessage("§cLe joueur " + targetName + " n'est pas en ligne.");
+                    player.sendMessage("§7[§e?§7]§c Le joueur " + targetName + " n'est pas en ligne.");
                 }
             }
         }
 
         // Gestion du menu de modification de réputation
-        else if (title.startsWith("Modifier Réputation")) {
-            event.setCancelled(true);
+        else if (title.startsWith("§7[§e?§7]§a Modifier Réputation")) {
+            event.setCancelled(true); // Empêche de prendre des objets
 
-            if (event.getCurrentItem() != null) {
-                Player target = selectedPlayers.get(player); // Récupère le joueur sélectionné
+            // Vérifie si un joueur est sélectionné
+            if (!selectedPlayers.containsKey(player)) {
+                player.sendMessage("§7[§e?§7]§c Erreur : aucun joueur sélectionné.");
+                return;
+            }
 
-                if (target != null) {
-                    switch (event.getCurrentItem().getType()) {
-                        case GREEN_DYE -> {
-                            // Exécute la commande /repadd pour ajouter 10 points
-                            String command = "repadd " + target.getName();
-                            player.performCommand(command); // Le joueur exécute la commande
-                            player.sendMessage("§aCommande exécutée : " + command);
-                            openReputationEditMenu(player, target); // Rafraîchit le menu
+            // Récupère le joueur cible
+            Player target = selectedPlayers.get(player);
+            if (target != null) {
+                switch (event.getCurrentItem().getType()) {
+                    case GREEN_DYE -> {
+                        // Commande pour ajouter 10 points
+                        boolean success = player.performCommand("repadd " + target.getName() + DixPoint );
+                        if (success) {
+                            player.sendMessage("§7[§e?§7]§a 10 points de réputation ajoutés à " + target.getName() + ".");
+                        } else {
+                            player.sendMessage("§7[§e?§7]§c Échec de l'exécution de la commande.");
                         }
-                        case RED_DYE -> {
-                            // Exécute la commande /repsubtract pour retirer 10 points
-                            String command = "repsubtract " + target.getName();
-                            player.performCommand(command); // Le joueur exécute la commande
-                            player.sendMessage("§cCommande exécutée : " + command);
-                            openReputationEditMenu(player, target); // Rafraîchit le menu
-                        }
-                        case PAPER -> {
-                            // Affiche la réputation actuelle (clic inutile)
-                            player.sendMessage("§eLa réputation actuelle de " + target.getName() + " est : " +
-                                    playerReputations.getOrDefault(target, 0));
-                        }
+                        openReputationEditMenu(player, target); // Rafraîchit le menu
                     }
-                } else {
-                    player.sendMessage("§cErreur : aucun joueur sélectionné.");
+                    case RED_DYE -> {
+
+                        // Commande pour retirer 10 points
+                        boolean success = player.performCommand("repadd " + target.getName() + MoinDixPoint );
+                        if (success) {
+                            player.sendMessage("§7[§e?§7]§a 10 points de réputation retirés à " + target.getName() + ".");
+                        } else {
+                            player.sendMessage("§7[§e?§7]§c Échec de l'exécution de la commande.");
+                        }
+                        openReputationEditMenu(player, target); // Rafraîchit le menu
+                    }
+                    case PAPER -> {
+                        // Affiche la réputation actuelle
+                        int reputation = playerReputations.getOrDefault(target, 0);
+                        player.sendMessage("§7[§e?§7] La réputation actuelle de " + target.getName() + " est : §a" + reputation + ".");
+                    }
+                    default -> {
+                        // Cas d'objet inattendu
+                        player.sendMessage("§7[§e?§7]§c Action non reconnue.");
+                    }
                 }
+            } else {
+                player.sendMessage("§7[§e?§7]§c Erreur : aucun joueur sélectionné.");
             }
         }
     }
+
+
+    @EventHandler
+    public void onPlayerKill(PlayerDeathEvent event) {
+        Player victim = event.getEntity();
+        Player killer = victim.getKiller();
+
+        if (killer != null) {
+            UUID killerId = killer.getUniqueId();
+            UUID victimId = victim.getUniqueId();
+            long currentTime = System.currentTimeMillis();
+
+            // Initialiser l'historique du tueur s'il n'existe pas encore
+            killHistory.putIfAbsent(killerId, new HashMap<>());
+            Map<UUID, Long> killerVictimHistory = killHistory.get(killerId);
+
+            // Vérifier si le tueur a déjà tué la victime au cours des 24 dernières heures
+            if (killerVictimHistory.containsKey(victimId)) {
+                long lastKillTime = killerVictimHistory.get(victimId);
+                if (currentTime - lastKillTime <= 24 * 60 * 60 * 1000) { // 24 heures en millisecondes
+                    // Appliquer une pénalité de réputation
+                    int currentRep = reputation.getOrDefault(killerId, loadPlayerReputation(killerId));
+                    int newRep = Math.max(currentRep - 1, MIN_REP); // Réduire de 1, sans descendre sous MIN_REP
+                    reputation.put(killerId, newRep);
+                    savePlayerReputation(killerId, newRep);
+                    killer.sendMessage(getMessage("reputation_lost24"));
+                }
+            }
+
+            // Mettre à jour l'historique des kills
+            killerVictimHistory.put(victimId, currentTime);
+
+            // Récompenser le tueur avec les points de kill normaux
+            int newRep = reputation.getOrDefault(killerId, loadPlayerReputation(killerId)) + pointsKill;
+            reputation.put(killerId, Math.max(newRep, MIN_REP));
+            killer.sendMessage(getMessage("reputation_lost"));
+
+            savePlayerReputation(killerId, Math.max(newRep, MIN_REP));
+            updateTablist(killer);
+        }
+    }
+
+
+
+
 
 
 
@@ -522,9 +603,9 @@ public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener
     }
 
     static class TablistUpdater extends BukkitRunnable {
-        private final ReputationPlugin plugin;
+        private final WizardStoneCraft plugin;
 
-        public TablistUpdater(ReputationPlugin plugin) {
+        public TablistUpdater(WizardStoneCraft plugin) {
             this.plugin = plugin;
         }
 
@@ -538,9 +619,9 @@ public class ReputationPlugin extends JavaPlugin implements TabExecutor,Listener
     }
     public static class UpdateTablistCommand implements CommandExecutor {
 
-        private final ReputationPlugin plugin;
+        private final WizardStoneCraft plugin;
 
-        public UpdateTablistCommand(ReputationPlugin plugin) {
+        public UpdateTablistCommand(WizardStoneCraft plugin) {
             this.plugin = plugin;
         }
 

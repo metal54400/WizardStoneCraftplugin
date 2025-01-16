@@ -1,6 +1,6 @@
 name: WizardStoneCraft
-version: '0.0.3'
-main: simpleRep.ReputationPlugin
+version: '0.0.5'
+main: fr.WizardStoneCraft.WizardStoneCraft
 api-version: '1.21'
 
 description: Plugin Principale de WizardStoneCraft
@@ -12,6 +12,16 @@ softdepend:
   - PlaceHolderAPI
 
 commands:
+  home:
+    description: Ouvre le menu de réputation
+    usage: /home <homelist>
+    permission: wizard.home
+
+  sethome:
+    description: creer un home
+    usage: /sethome <homename>
+    permission: wizard.sethome
+
   repmenu:
     description: Ouvre le menu de réputation
     usage: /repmenu

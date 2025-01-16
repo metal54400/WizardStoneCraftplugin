@@ -1,5 +1,6 @@
-package simpleRep;
+package fr.WizardStoneCraft.Commands;
 
+import fr.WizardStoneCraft.WizardStoneCraft;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -11,9 +12,9 @@ import java.util.List;
 
 public class RepReloadCommand implements TabExecutor {
     private String reloadMessages;
-    private final ReputationPlugin plugin;
+    private final WizardStoneCraft plugin;
 
-    public RepReloadCommand(ReputationPlugin plugin) {
+    public RepReloadCommand(WizardStoneCraft plugin) {
         this.plugin = plugin;
     }
 

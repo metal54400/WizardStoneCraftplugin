@@ -1,4 +1,4 @@
-package simpleRep;
+package fr.WizardStoneCraft.Commands;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

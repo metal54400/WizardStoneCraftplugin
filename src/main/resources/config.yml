@@ -1,8 +1,10 @@
 
-minimum-reputation: -500
-maximum-reputation: 500
-points-kill: -4
-points-join: 8
+minimum-reputation: -120
+maximum-reputation: 120
+points-kill: -1
+points-join: 4
+dixpoint: 10
+moindixpoint: -10
 
 tablist:
   header: "§aBienvenue sur le serveur &6MonServeur"
@@ -25,7 +27,6 @@ reputation-prefix:
     bad: "§cΩ"
     horrible: "§4Ω"
 
-messages:
-  reload_success: "§7[§e?§7] Configuration et messages rechargés avec succès!"
-  noperm: "§7[§e?§7] §cVous n'avez pas la permission d'utiliser cette commande"
+
+
 
