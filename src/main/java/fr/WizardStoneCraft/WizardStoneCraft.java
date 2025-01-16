@@ -96,7 +96,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("rephelp").setExecutor(new RepHelpCommand());
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
         getCommand("sethome").setExecutor(new SetHomeCommand(reputation));
-        getCommand("home").setExecutor(new HomeCommand((Map<UUID, Location>) this));
+        getCommand("home").setExecutor(new HomeCommand(reputation));
 
 
 
