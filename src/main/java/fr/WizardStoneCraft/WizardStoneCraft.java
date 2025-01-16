@@ -34,7 +34,9 @@ import java.util.*;
 
 
 public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener {
-    final Map<UUID, Integer> reputation = new HashMap<>();
+
+
+    public final Map<UUID, Integer> reputation = new HashMap<>();
     private final Map<UUID, Map<UUID, Long>> killHistory = new HashMap<>();
     private final Map<Player, Integer> playerReputations = new HashMap<>(); // Stocke la réputation des joueurs
     private final Map<Player, Player> selectedPlayers = new HashMap<>();
@@ -64,6 +66,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         loadMessages();
         config = getConfig();
         WizardStoneCraft plugin = this;
+
 
 
 
@@ -203,7 +206,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         pointsJoin = getConfig().getInt("points-join");
     }
 
-    void loadMessages() {
+    public void loadMessages() {
         File messagesFile = new File(getDataFolder(), "messages.yml");
         if (!messagesFile.exists()) {
             saveResource("messages.yml", false);
