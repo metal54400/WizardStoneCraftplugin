@@ -38,6 +38,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     private final Map<UUID, Map<UUID, Long>> killHistory = new HashMap<>();
     private final Map<Player, Integer> playerReputations = new HashMap<>(); // Stocke la réputation des joueurs
     private final Map<Player, Player> selectedPlayers = new HashMap<>();
+
     public int MIN_REP;
     public  int MAX_REP;
     private int pointsKill;
@@ -89,7 +90,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("rephighlight").setExecutor(new RepHighlightCommand());
         getCommand("rephelp").setExecutor(new RepHelpCommand());
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
-        Map<UUID, Integer> reputation = loadReputationData(); // Chargez les données de réputation
+         // Chargez les données de réputation
         getCommand("sethome").setExecutor(new SetHomeCommand(reputation));
 
 
