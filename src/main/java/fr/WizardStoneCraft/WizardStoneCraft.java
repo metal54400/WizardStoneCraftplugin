@@ -2,10 +2,7 @@ package fr.WizardStoneCraft;
 
 
 
-import fr.WizardStoneCraft.Commands.HomeCommand;
-import fr.WizardStoneCraft.Commands.RepHelpCommand;
-import fr.WizardStoneCraft.Commands.RepReloadCommand;
-import fr.WizardStoneCraft.Commands.SetHomeCommand;
+import fr.WizardStoneCraft.Commands.*;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
@@ -97,6 +94,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
         getCommand("sethome").setExecutor(new SetHomeCommand(reputation));
         getCommand("home").setExecutor(new HomeCommand(reputation));
+        getCommand("Broadcast").setExecutor(new Broadcast());
 
 
 
