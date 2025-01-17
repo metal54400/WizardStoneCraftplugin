@@ -1,0 +1,15 @@
+# messages.yml
+reputation_lost: "&7[&e?&7] Vous avez perdu &c-1 point &7de réputation pour avoir tué un joueur."
+reputation_lost24h: "&7[&e?&7] Vous avez perdu 1 point de réputation pour avoir tué la même personne en moins de 24 heures."
+reputation_gained: "&7[&e?&7] Vous avez gagné &a2 points de réputation pour votre connexion quotidienne."
+no_permission: "&7[&e?&7] &cVous n'avez pas la permission d'utiliser cette commande."
+player_not_found: "&7[&e?&7] &cJoueur introuvable !"
+usage: "&7[&e?&7] Usage: &7/%command% <player> <amount>"
+rep_modified: "&7[&e?&7] Modifié la réputation de %player% de %amount% points."
+reputation_status: "&7[&e?&7] %player% a %reputation% points de réputation. Statut: %status%"
+top_reputations: "&7[&e?&7] Top 5 des réputations:"
+messages:
+reload_success: "§7[§e?§7] Configuration et messages rechargés avec succès!"
+noperm: "§7[§e?§7] §cVous n'avez pas la permission d'utiliser cette commande"
+
+
