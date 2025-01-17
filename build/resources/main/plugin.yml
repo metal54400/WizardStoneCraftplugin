@@ -27,6 +27,11 @@ commands:
     usage: /repmenu
     permission: repmenu.use
 
+  broadcast:
+    description: Ouvre le menu de réputation
+    usage: /broadcast
+    permission: broadcast.msg
+
   repreload:
     description: Ajouter des points de réputation à un joueur.
     usage: /repreload
