@@ -1,5 +1,5 @@
 name: WizardStoneCraft
-version: '0.0.7'
+version: '0.0.8'
 main: fr.WizardStoneCraft.WizardStoneCraft
 api-version: [1.21],[1.20],[1.12],[1.16],[1.15],[1.13],[1.13],[1.17],[1.18],[1.19],[1.8],[1.7],[1.9],[1.10]
 
