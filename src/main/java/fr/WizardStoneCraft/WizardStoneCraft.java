@@ -47,8 +47,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     public  int MAX_REP;
     private int pointsKill;
     private int pointsJoin;
-    public int DixPoint;
-    public int MoinDixPoint;
+    public int DixPoint = 10;
+    public int MoinDixPoint = -10;
     private FileConfiguration messages;
     private String tabPrefix;
     private String chatPrefix;
