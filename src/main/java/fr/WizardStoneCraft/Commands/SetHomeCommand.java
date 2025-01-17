@@ -34,7 +34,7 @@ public class SetHomeCommand implements CommandExecutor {
         // Vérifie la réputation du joueur
         if (playerReputation <= MIN_REPUTATION) {
             if (playerReputation <= -100) {
-                player.sendMessage("§7[§e?§7]Votre réputation est §4horrible§7. Vous n'avez pas accès à cette commande.");
+                player.sendMessage("§7[§e?§7] Votre réputation est §4horrible§7. Vous n'avez pas accès à cette commande.");
             } else {
                 player.sendMessage("§7[§e?§7] Votre réputation est §6mauvaise§7. Vous n'avez pas accès à cette commande.");
             }

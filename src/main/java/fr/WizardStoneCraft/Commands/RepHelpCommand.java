@@ -17,22 +17,24 @@ public class RepHelpCommand implements TabExecutor {
             return true;
         }
 
-        sender.sendMessage(ChatColor.GOLD + "Commandes de ReputationPlugin:");
-        sender.sendMessage(ChatColor.YELLOW + "/repadd <player> <amount> - Ajouter des points de réputation à un joueur.");
-        sender.sendMessage(ChatColor.YELLOW + "/repsubtract <player> <amount> - Soustraire des points de réputation à un joueur.");
-        sender.sendMessage(ChatColor.YELLOW + "/reptop - Afficher le top 5 des réputations.");
-        sender.sendMessage(ChatColor.YELLOW + "/repinfo pour voir les diffrent state des reputation .");
-        sender.sendMessage(ChatColor.YELLOW + "/rep <player> - Afficher les informations de réputation d'un joueur.");
-        sender.sendMessage(ChatColor.YELLOW + "/rephighlight <player> - Mettre en évidence la réputation d'un joueur.");
-        sender.sendMessage(ChatColor.YELLOW + "/rephelp - Afficher cette liste de commandes.");
-        sender.sendMessage(ChatColor.YELLOW + "/tabreload - metre a jours le tab.");
-        sender.sendMessage(ChatColor.YELLOW + "/repreload - mettre a jours les config.");
+        sender.sendMessage(ChatColor.GOLD + "§7[§e?§7] Commandes de ReputationPlugin:");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /repadd <player> <amount> - Ajouter des points de réputation à un joueur.");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /repsubtract <player> <amount> - Soustraire des points de réputation à un joueur.");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /reptop - Afficher le top 5 des réputations.");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /repinfo pour voir les diffrent state des reputation .");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /rep <player> - Afficher les informations de réputation d'un joueur.");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /rephighlight <player> - Mettre en évidence la réputation d'un joueur.");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /rephelp - Afficher cette liste de commandes.");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /sethome - Premet de créer des homes");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /home - Premet de se téléporté dans un home");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /tabreload - metre a jours le tab.");
+        sender.sendMessage(ChatColor.YELLOW + " §7[§e?§7] /repreload - mettre a jours les config.");
 
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        return Arrays.asList("repadd","tabreload" ,"repreload","repsubtract", "rep","reptop", "repinfo", "rephighlight", "rephelp");
+        return Arrays.asList("repadd","tabreload" ,"repreload","repsubtract", "rep", "sethome","home","reptop", "repinfo", "rephighlight", "rephelp");
     }
 }

@@ -34,15 +34,11 @@ public class HomeCommand implements CommandExecutor {
         // Vérification de la réputation
         int playerReputation = reputation.getOrDefault(playerId, 0); // Récupère la réputation ou 0 si absent
         if (playerReputation <= MIN_REPUTATION) {
-            player.sendMessage("§7[§e?§7] Votre réputation est trop basse pour utiliser cette commande.");
-            return true;
-        }
-
-        // Sous-commandes (ex: /home set ou /home)
-        if (args.length > 0 && args[0].equalsIgnoreCase("set")) {
-            // Commande pour définir le home
-            homeLocations.put(playerId, player.getLocation());
-            player.sendMessage("§7[§e?§7] Votre position actuelle a été définie comme votre point de home.");
+            if (playerReputation <= -100) {
+                player.sendMessage("§7[§e?§7] Votre réputation est §4horrible§7. Vous n'avez pas accès à cette commande.");
+            } else {
+                player.sendMessage("§7[§e?§7] Votre réputation est §6mauvaise§7. Vous n'avez pas accès à cette commande.");
+            }
             return true;
         }
 
