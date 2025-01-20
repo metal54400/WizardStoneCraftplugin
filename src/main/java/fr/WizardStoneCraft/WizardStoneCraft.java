@@ -6,10 +6,7 @@ import fr.WizardStoneCraft.Commands.*;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -26,6 +23,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.*;
 import java.util.*;
@@ -39,7 +39,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     private final Map<UUID, Map<UUID, Long>> killHistory = new HashMap<>();
     private final Map<Player, Integer> playerReputations = new HashMap<>(); // Stocke la réputation des joueurs
     private final Map<Player, Player> selectedPlayers = new HashMap<>();
-
+    List<String> lore = new ArrayList<>(); // Crée une liste vide
     public int MIN_REP;
     public  int MAX_REP;
     private int pointsKill;
@@ -92,8 +92,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("rephighlight").setExecutor(new RepHighlightCommand());
         getCommand("rephelp").setExecutor(new RepHelpCommand());
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
-        getCommand("home").setExecutor(new HomeCommand(reputation));
         getCommand("Broadcast").setExecutor(new Broadcast());
+
 
 
 
@@ -304,7 +304,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                         } else {
                             player.sendMessage("§7[§e?§7]§c Échec de l'exécution de la commande.");
                         }
-                        openReputationEditMenu(player, target); // Rafraîchit le menu
+                        openReputationEditMenu(player, target);
+                        event.setCancelled(true); // Rafraîchit le menu
                     }
                     case RED_DYE -> {
 
@@ -316,11 +317,13 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                             player.sendMessage("§7[§e?§7]§c Échec de l'exécution de la commande.");
                         }
                         openReputationEditMenu(player, target); // Rafraîchit le menu
+                        event.setCancelled(true);
                     }
                     case PAPER -> {
                         // Affiche la réputation actuelle
                         int reputation = playerReputations.getOrDefault(target, 0);
                         player.sendMessage("§7[§e?§7] La réputation actuelle de " + target.getName() + " est : §a" + reputation + ".");
+                        event.setCancelled(true);
                     }
                     default -> {
                         // Cas d'objet inattendu
@@ -329,6 +332,29 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                 }
             } else {
                 player.sendMessage("§7[§e?§7]§c Erreur : aucun joueur sélectionné.");
+            }
+        }
+    }
+
+    @EventHandler
+    public void onCreativeItemMove(InventoryClickEvent event) {
+        // Vérifie que le joueur est en mode créatif
+        if (event.getWhoClicked().getGameMode() == GameMode.CREATIVE) {
+            // Vérifie si le joueur a un grade spécifique
+            if (event.getWhoClicked().hasPermission("moderator") || event.getWhoClicked().hasPermission("op")) {
+                ItemStack item = event.getCursor(); // Récupère l'objet déplacé
+                if (item != null) {
+                    ItemMeta meta = item.getItemMeta();
+                    if (meta != null) {
+                        // Récupère le lore existant (ou crée un nouveau s'il est vide)
+                        List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+
+                        // Ajoute le nom du joueur au lore
+                        lore.add("§7Rembourcé par " + event.getWhoClicked().getName());
+                        meta.setLore(lore); // Met à jour le lore de l'objet
+                        item.setItemMeta(meta); // Applique les modifications à l'objet
+                    }
+                }
             }
         }
     }

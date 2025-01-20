@@ -1,7 +1,7 @@
 name: WizardStoneCraft
-version: '0.0.9'
+version: '0.0.10'
 main: fr.WizardStoneCraft.WizardStoneCraft
-api-version: [1.21],[1.20],[1.12],[1.16],[1.15],[1.13],[1.13],[1.17],[1.18],[1.19],[1.8],[1.7],[1.9],[1.10]
+api-version: 1.21
 
 description: Plugin Principale de WizardStoneCraft
 author: Metal54400 and MetalGames - studio
