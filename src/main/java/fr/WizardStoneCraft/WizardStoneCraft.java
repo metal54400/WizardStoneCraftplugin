@@ -2,10 +2,12 @@ package fr.WizardStoneCraft;
 
 
 
+import com.earth2me.essentials.Essentials;
 import fr.WizardStoneCraft.Commands.*;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -20,6 +22,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -51,6 +54,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     private String chatPrefix;
     private FileConfiguration config;
     private LuckPerms luckPerms;
+    private Essentials essentials;
+    private static Economy econ = null;
 
     @Override
     public void onLoad() {
@@ -71,7 +76,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
 
 
-        // Initialisation de LuckPerms API
+
+        // Initialisation des API
         RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
         if (provider != null) {
             luckPerms = provider.getProvider();
@@ -79,6 +85,15 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         } else {
             getLogger().warning("§7[§e?§7]§c LuckPerms API non détectée !");
         }
+
+        RegisteredServiceProvider<Essentials> essentialsRegisteredServiceProvider = Bukkit.getServicesManager().getRegistration(Essentials.class);
+        if (provider != null) {
+            essentials = essentialsRegisteredServiceProvider.getProvider();
+            getLogger().info("§7[§e?§7]§a Essentials API détectée et connectée !");
+        } else {
+            getLogger().warning("§7[§e?§7]§c Essentials API non détectée !");
+        }
+
 
 
 
@@ -90,18 +105,14 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("reptop").setExecutor(new ReptopCommand());
         getCommand("rep").setExecutor(new ReputationCommand());
         getCommand("rephighlight").setExecutor(new RepHighlightCommand());
-        getCommand("rephelp").setExecutor(new RepHelpCommand());
+        getCommand("help").setExecutor(new RepHelpCommand());
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
         getCommand("Broadcast").setExecutor(new Broadcast());
+        getCommand("tabreload").setExecutor(new UpdateTablistCommand(this));
+        //getCommand("profile").setExecutor(new ProfileMenu());
 
-
-
-
-        // Créer une instance de RepMenu et l'enregistrer en tant qu'écouteur d'événements
-        this.getCommand("tabreload").setExecutor(new UpdateTablistCommand(this));
 
     }
-
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (label.equalsIgnoreCase("repmenu") && sender instanceof Player) {
@@ -117,6 +128,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         }
         return false;
     }
+
+
 
     /**
      * Ouvre le menu de la liste des joueurs.
@@ -250,6 +263,33 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     }
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getView().getTitle().equals(ChatColor.GREEN + "Menu des Profils")) {
+            event.setCancelled(true);
+
+            ItemStack clickedItem = event.getCurrentItem();
+            if (clickedItem == null || clickedItem.getType() != Material.PLAYER_HEAD) {
+                return;
+            }
+
+            Player player = (Player) event.getWhoClicked();
+            SkullMeta skullMeta = (SkullMeta) clickedItem.getItemMeta();
+
+            if (skullMeta == null || skullMeta.getOwningPlayer() == null) {
+                return;
+            }
+
+            Player target = Bukkit.getPlayer(skullMeta.getOwningPlayer().getName());
+
+            if (target != null) {
+                player.sendMessage(ChatColor.AQUA + "Statistiques de " + ChatColor.YELLOW + target.getName() + ":");
+                player.sendMessage(ChatColor.GREEN + "- Argent: " + ChatColor.GOLD + econ /* Remplace par la vraie valeur */);
+                player.sendMessage(ChatColor.GREEN + "- Succès: " + ChatColor.GOLD + "10/50" /* Remplace par la vraie valeur */);
+                player.sendMessage(ChatColor.GREEN + "- Réputation: " + ChatColor.GOLD + reputation /* Remplace par la vraie valeur */);
+            }
+        }
+    }
+    @EventHandler
+    public void onInventoryRepClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
         String title = event.getView().getTitle();
 
@@ -335,6 +375,9 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             }
         }
     }
+
+
+
 
     @EventHandler
     public void onCreativeItemMove(InventoryClickEvent event) {

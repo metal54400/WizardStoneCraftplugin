@@ -1,5 +1,5 @@
 name: WizardStoneCraft
-version: '0.0.10'
+version: '0.0.11'
 main: fr.WizardStoneCraft.WizardStoneCraft
 api-version: 1.21
 
@@ -10,19 +10,17 @@ softdepend:
   - EssentialsX
   - Luckperms
   - PlaceHolderAPI
+  - Vault
 
 commands:
   home:
     description: Ouvre le menu de réputation
-    usage: /home [set|delete|list|<nom>]
-    permission: wizard.home
-
-
+    usage: /home
+    permission: default
 
   repmenu:
     description: Ouvre le menu de réputation
     usage: /repmenu
-    permission: repmenu.use
 
   broadcast:
     description: Ouvre le menu de réputation
@@ -50,10 +48,10 @@ commands:
     usage: /rep <player>
     aliases: reputation
 
-  rephelp:
+  /help:
     description: aide sur la reputation
-    usage: /rephelp
-    aliases: reputationhelp
+    usage: /help
+    aliases: aide
 
   tabreload:
     description: Reload the tablist configuration
@@ -62,8 +60,6 @@ commands:
   rephighlight:
     description: Mettre en évidence la réputation d'un joueur.
     usage: /rephighlight <player>
-
-
 
 
 permissions:
