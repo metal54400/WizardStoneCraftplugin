@@ -4,6 +4,8 @@ package fr.WizardStoneCraft;
 
 import com.earth2me.essentials.Essentials;
 import fr.WizardStoneCraft.Commands.*;
+import net.ess3.nms.refl.providers.AchievementListenerProvider;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
@@ -38,6 +40,7 @@ import java.util.*;
 public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener {
 
 
+    public static Object ReputationCommand;
     public final Map<UUID, Integer> reputation = new HashMap<>();
     private final Map<UUID, Map<UUID, Long>> killHistory = new HashMap<>();
     private final Map<Player, Integer> playerReputations = new HashMap<>(); // Stocke la réputation des joueurs
@@ -55,6 +58,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     private FileConfiguration config;
     private LuckPerms luckPerms;
     private Essentials essentials;
+    private Placeholder placeholder;
     private static Economy econ = null;
 
     @Override
@@ -92,6 +96,14 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             getLogger().info("§7[§e?§7]§a Essentials API détectée et connectée !");
         } else {
             getLogger().warning("§7[§e?§7]§c Essentials API non détectée !");
+        }
+
+        RegisteredServiceProvider<Placeholder> placeholderRegisteredServiceProvider = Bukkit.getServicesManager().getRegistration(Placeholder.class);
+        if (provider != null) {
+            placeholder = placeholderRegisteredServiceProvider.getProvider();
+            getLogger().info("§7[§e?§7]§a Placeholder API détectée et connectée !");
+        } else {
+            getLogger().warning("§7[§e?§7]§c Placeholder API non détectée !");
         }
 
 
@@ -712,6 +724,64 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             return true;
         }
     }
+
+    class ProfileCommand implements CommandExecutor {
+        @Override
+        public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage("Seuls les joueurs peuvent utiliser cette commande.");
+                return true;
+            }
+
+            Player player = (Player) sender;
+            openProfileMenu(player);
+            return true;
+        }
+
+        private void openProfileMenu(Player player) {
+            Inventory profileMenu = Bukkit.createInventory(null, 9, ChatColor.GOLD + "Profil du Joueur");
+
+            ItemStack statsItem = new ItemStack(Material.PAPER);
+            ItemMeta statsMeta = statsItem.getItemMeta();
+            statsMeta.setDisplayName(ChatColor.GREEN + "Statistiques");
+            List<String> statsLore = new ArrayList<>();
+            statsLore.add(ChatColor.AQUA + "Niveau: " + player.getLevel());
+            statsLore.add(ChatColor.AQUA + "Expérience: " + player.getTotalExperience());
+            statsMeta.setLore(statsLore);
+            statsItem.setItemMeta(statsMeta);
+
+            ItemStack reputationItem = new ItemStack(Material.DIAMOND);
+            ItemMeta reputationMeta = reputationItem.getItemMeta();
+            reputationMeta.setDisplayName(ChatColor.GREEN + "Réputation");
+            List<String> reputationLore = new ArrayList<>();
+            reputationLore.add(ChatColor.AQUA + "Réputation: " + getReputation(player));
+            reputationMeta.setLore(reputationLore);
+            reputationItem.setItemMeta(reputationMeta);
+
+            ItemStack achievementsItem = new ItemStack(Material.ANVIL);
+            ItemMeta achievementsMeta = achievementsItem.getItemMeta();
+            achievementsMeta.setDisplayName(ChatColor.GREEN + "Succès");
+            List<String> achievementsLore = new ArrayList<>();
+            //achievementsLore.add(ChatColor.AQUA + "Succès débloqués: " + getAchievements(player));
+            //achievementsMeta.setLore(achievementsLore);
+            //achievementsItem.setItemMeta(achievementsMeta);
+
+            profileMenu.setItem(2, statsItem);
+            profileMenu.setItem(4, reputationItem);
+            profileMenu.setItem(6, achievementsItem);
+
+            player.openInventory(profileMenu);
+        }
+
+        private int getReputation(Player player) {
+            return (player.getLevel() * 10);
+        }
+
+        //private int getAchievements(Player player) {
+
+            //return false;  //player.getStatistic(Achievement.Enum.EnumDesc / 1000);
+        //}
+        }
 }
 
 

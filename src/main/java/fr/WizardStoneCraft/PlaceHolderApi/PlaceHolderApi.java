@@ -1,7 +1,8 @@
 package fr.WizardStoneCraft.PlaceHolderApi;
 
+import fr.WizardStoneCraft.WizardStoneCraft;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import org.jetbrains.annotations.NotNull;
+
 
 public class PlaceHolderApi extends PlaceholderExpansion {
     @Override
@@ -10,12 +11,23 @@ public class PlaceHolderApi extends PlaceholderExpansion {
     }
 
     @Override
-    public @NotNull String getAuthor() {
+    public String getAuthor() {
         return "metal54400";
     }
 
     @Override
-    public @NotNull String getVersion() {
-        return "0.0.5";
+    public String getVersion() {
+        return "0.0.11";
+    }
+
+    @Override
+    public boolean register() {
+        Object reputationCommand = WizardStoneCraft.ReputationCommand;
+        return super.register();
+    }
+
+    @Override
+    public boolean canRegister() {
+        return super.canRegister();
     }
 }
