@@ -782,6 +782,15 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             //return false;  //player.getStatistic(Achievement.Enum.EnumDesc / 1000);
         //}
         }
+    public int getReputation(Player player) {
+        return reputation.getOrDefault(player.getUniqueId(), 0);
+    }
+    public void removeReputation(Player player, int amount) {
+        reputation.put(player.getUniqueId(), Math.max(-120, getReputation(player) - amount));
+        if (getReputation(player) <= -120) {
+            player.kickPlayer(messages.getString("ban_message"));
+        }
+    }
 }
 
 
