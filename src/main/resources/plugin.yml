@@ -1,68 +1,83 @@
 name: WizardStoneCraft
-version: '0.0.12-Alpha'
+version: '0.0.14-Alpha'
 main: fr.WizardStoneCraft.WizardStoneCraft
 api-version: 1.21
 
-description: Plugin Principale de WizardStoneCraft
+description: Plugin Principal de WizardStoneCraft
 author: Metal54400 and MetalGames - studio
 website: http://5.48.143.126:25565
 softdepend:
   - EssentialsX
-  - Luckperms
-  - PlaceHolderAPI
+  - LuckPerms
+  - PlaceholderAPI
   - Vault
 
 commands:
   home:
     description: Ouvre le menu de réputation
     usage: /home
-    permission: default
+    permission: wizardstonecraft.home
 
   repmenu:
     description: Ouvre le menu de réputation
     usage: /repmenu
+    permission: wizardstonecraft.repmenu
 
   broadcast:
-    description: Ouvre le menu de réputation
+    description: Envoie un message global
     usage: /broadcast
-    permission: broadcast.msg
+    permission: wizardstonecraft.broadcast
 
   repreload:
-    description: Ajouter des points de réputation à un joueur.
+    description: Recharge la configuration de la réputation
     usage: /repreload
-    aliases: reputationreload
+    aliases: [reputationreload]
+    permission: wizardstonecraft.repreload
 
   repadd:
     description: Ajouter des points de réputation à un joueur.
     usage: /repadd <player> <amount>
-    aliases: reputationadd
+    aliases: [reputationadd]
+    permission: wizardstonecraft.repadd
+
   repsubtract:
     description: Soustraire des points de réputation à un joueur.
     usage: /repsubtract <player> <amount>
+    permission: wizardstonecraft.repsubtract
+
   reptop:
     description: Afficher le top 5 des réputations.
     usage: /reptop
-    aliases: reputationTop
+    aliases: [reputationTop]
+
+
   rep:
     description: Afficher les informations de réputation d'un joueur.
     usage: /rep <player>
-    aliases: reputation
+    aliases: [reputation]
 
-  /help:
-    description: aide sur la reputation
+
+  help:
+    description: Affiche l'aide sur la réputation
     usage: /help
-    aliases: aide
+    aliases: [aide]
+    permission: wizardstonecraft.help
 
   tabreload:
-    description: Reload the tablist configuration
+    description: Recharge la configuration du tablist
     usage: /tabreload
+    permission: wizardstonecraft.tabreload
 
   rephighlight:
-    description: Mettre en évidence la réputation d'un joueur.
+    description: Met en évidence la réputation d'un joueur.
     usage: /rephighlight <player>
-
+    permission: wizardstonecraft.rephighlight
 
 permissions:
-  reputation.menu:
+  wizardstonecraft.menu:
     description: Permet d'accéder au menu de gestion de réputation.
+    default: op
+
+  wizardstonecraft.broadcast:
+    description: Permet d'envoyer des messages globaux.
     default: op

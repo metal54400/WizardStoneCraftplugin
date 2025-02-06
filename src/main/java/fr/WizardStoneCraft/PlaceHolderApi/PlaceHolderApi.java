@@ -4,8 +4,8 @@ import fr.WizardStoneCraft.WizardStoneCraft;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 
 
-public class PlaceHolderApi extends PlaceholderExpansion {
-    @Override
+public class PlaceHolderApi /**extends PlaceholderExpansion **/{
+/**@Override
     public  String getIdentifier() {
         return "WizardStoneCraft";
     }
@@ -29,5 +29,5 @@ public class PlaceHolderApi extends PlaceholderExpansion {
     @Override
     public boolean canRegister() {
         return super.canRegister();
-    }
+    }**/
 }

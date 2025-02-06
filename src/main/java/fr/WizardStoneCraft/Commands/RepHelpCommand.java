@@ -2,6 +2,7 @@ package fr.WizardStoneCraft.Commands;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
@@ -9,7 +10,7 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 import java.util.List;
 
-public class RepHelpCommand implements TabExecutor {
+public class RepHelpCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -35,8 +36,5 @@ public class RepHelpCommand implements TabExecutor {
         return true;
     }
 
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        return Arrays.asList("repadd","tabreload" ,"repreload","repsubtract", "rep","profile","repmenu","sethome","home","reptop", "repinfo", "rephighlight", "rephelp");
-    }
+
 }

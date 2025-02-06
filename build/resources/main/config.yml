@@ -1,10 +1,9 @@
 
 minimum-reputation: -120
 maximum-reputation: 120
-points-kill: -1
+points-kill: -2
 points-join: 4
-dixpoint: 10
-moindixpoint: -10
+
 
 tablist:
   header: "§aBienvenue sur le serveur &6MonServeur"
