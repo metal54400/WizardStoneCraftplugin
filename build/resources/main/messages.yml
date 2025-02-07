@@ -6,7 +6,7 @@ no_permission: "&7[&e?&7] &cVous n'avez pas la permission d'utiliser cette comma
 player_not_found: "&7[&e?&7] &cJoueur introuvable !"
 usage: "&7[&e?&7] Usage: &7/%command% <player> <amount>"
 rep_modified: "&7[&e?&7] Modifié la réputation de %player% de %amount% points."
-reputation_status: "&7[&e?&7] %player% a %reputation% points de réputation. Statut: %status%"
+reputation_status: "%liste% &7[&e?&7] %player% a  points de réputation. Statut: %rep%"
 top_reputations: "&7[&e?&7] Top 5 des réputations:"
 ban_message: "&f[&cBanni&f]&7 Vous étais banni 15 Jour Acause de Votre Reputation "
 messages:

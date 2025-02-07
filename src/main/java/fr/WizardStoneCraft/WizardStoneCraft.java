@@ -419,35 +419,36 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             UUID victimId = victim.getUniqueId();
             long currentTime = System.currentTimeMillis();
 
-            // Initialiser l'historique du tueur s'il n'existe pas encore
+            // Initialiser l'historique du tueur si inexistant
             killHistory.putIfAbsent(killerId, new HashMap<>());
             Map<UUID, Long> killerVictimHistory = killHistory.get(killerId);
 
-            // Vérifier si le tueur a déjà tué la victime au cours des 24 dernières heures
+            // Charger la réputation actuelle
+            int currentRep = reputation.getOrDefault(killerId, loadPlayerReputation(killerId));
+            int newRep = currentRep; // Variable pour la nouvelle réputation
+
+            // Vérifier si le tueur a déjà tué la victime en 24h
             if (killerVictimHistory.containsKey(victimId)) {
                 long lastKillTime = killerVictimHistory.get(victimId);
-                if (currentTime - lastKillTime <= 24 * 60 * 60 * 1000) { // 24 heures en millisecondes
-                    // Appliquer une pénalité de réputation
-                    int currentRep = reputation.getOrDefault(killerId, loadPlayerReputation(killerId));
-                    int newRep = Math.max(currentRep - 2, MIN_REP); // Réduire de 1, sans descendre sous MIN_REP
-                    reputation.put(killerId, newRep);
-                    savePlayerReputation(killerId, newRep);
+                if (currentTime - lastKillTime <= 24 * 60 * 60 * 1000) { // Moins de 24h
+                    newRep = Math.max(newRep - 2, MIN_REP); // Appliquer une pénalité
                     killer.sendMessage(getMessage("reputation_lost24"));
                 }
             }
 
-            // Mettre à jour l'historique des kills
+            // Mettre à jour l'historique AVANT d'ajouter les points normaux
             killerVictimHistory.put(victimId, currentTime);
 
-            // Récompenser le tueur avec les points de kill normaux
-            int newRep = reputation.getOrDefault(killerId, loadPlayerReputation(killerId)) + pointsKill;
-            reputation.put(killerId, Math.max(newRep, MIN_REP));
-            killer.sendMessage(getMessage("reputation_lost"));
+            // Récompenser avec les points normaux
+            newRep = Math.min(newRep + pointsKill, MAX_REP);
+            reputation.put(killerId, newRep);
 
-            savePlayerReputation(killerId, Math.max(newRep, MIN_REP));
-            updateTablist(killer);
+            // Sauvegarder et informer le joueur
+            savePlayerReputation(killerId, newRep);
+            killer.sendMessage(getMessage("reputation_updated").replace("%reputation%", String.valueOf(newRep)));
         }
     }
+
 
 
 
@@ -458,7 +459,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     private void updateTabList(Player player) {
         UUID playerId = player.getUniqueId();
         int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
-        String prefix = getColoredReputationPrefix();
+        String prefix = getReputationStatus(rep);
         String tabName = prefix + " " + ChatColor.RESET + player.getName();
         player.setPlayerListName(tabName);
     }
@@ -468,7 +469,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
-        String prefix = getColoredReputationPrefix();
+        String prefix = getReputationStatus(rep);
         String gradePrefix = getLuckPermsPrefix(player);
         event.setFormat(prefix + " " + gradePrefix + " " + ChatColor.RESET + "<%1$s> %2$s");
         Player players = event.getPlayer();
@@ -514,8 +515,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         return ChatColor.translateAlternateColorCodes('&', config.getString("reputation-prefix.horrible"));
     }
 
-    private String getColoredReputationPrefix() {
-        int reputation = 120;
+    private String getColoredReputationPrefix(int reputation) {
+
         if (reputation >= 100) return getConfig().getString("reputation-status.honorable");
         if (reputation >= 50) return getConfig().getString("reputation-status.good");
         if (reputation >= 0) return getConfig().getString("reputation-status.neutral");
@@ -531,6 +532,14 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         if (reputation >= 0) return getConfig().getString("reputation-prefix.neutral");
         if (reputation >= -50) return getConfig().getString("reputation-prefix.dangerous");
         if (reputation >= -100) return getConfig().getString("reputation-prefix.bad");
+        return getConfig().getString("reputation-status.horrible");
+    }
+    public String getReputationPrefixe(int reputation) {
+        if (reputation >= 100) return getConfig().getString("reputation-prefixe.honorable");
+        if (reputation >= 50) return getConfig().getString("reputation-prefixe.good");
+        if (reputation >= 0) return getConfig().getString("reputation-prefixe.neutral");
+        if (reputation >= -50) return getConfig().getString("reputation-prefixe.dangerous");
+        if (reputation >= -100) return getConfig().getString("reputation-prefixe.bad");
         return getConfig().getString("reputation-status.horrible");
     }
     private String getLuckPermsPrefix(Player player) {
@@ -610,7 +619,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             String status = getReputationStatus(rep);
             sender.sendMessage(getMessage("reputation_status")
                     .replace("%player%", target.getName())
-                    .replace("%reputationprefix%", getColoredReputationPrefix())
+                    .replace("%rep%", getReputationPrefixe(rep))
                     .replace("%reputation%", String.valueOf(rep))
                     .replace("%liste%", "" +
                             "\n"+
@@ -619,7 +628,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                             "§7Ω Neutre\n" +
                             "§6Ω Dangereux\n" +
                             "§cΩ Mauvaise\n" +
-                            "§4Ω Horrible")
+                            "§4Ω Horrible\n"+
+                            "\n")
                     .replace("%status%", status));
 
             return true;
@@ -635,8 +645,18 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
             reputation.entrySet().stream()
                     .sorted(Map.Entry.<UUID, Integer>comparingByValue().reversed())
-                    .limit(5)
-                    .forEach(entry -> sender.sendMessage(" §7[§e?§7]" + Bukkit.getOfflinePlayer(entry.getKey()).getName() + ": " + entry.getValue() + " points"));
+                    .limit(9)
+                    .forEach(entry -> {
+                        UUID playerId = entry.getKey();
+                        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerId);
+                        int reps = entry.getValue();
+
+                        // Obtenir le préfixe de réputation
+                        String prefix = getReputationPrefixe(reps);
+
+                        // Afficher le message avec le préfixe
+                        sender.sendMessage( offlinePlayer.getName() + ": " + prefix + " " + reps + " points de Réputation");
+                    });
 
             return true;
         }
@@ -646,6 +666,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             return null; // Implémentation pour les suggestions automatiques
         }
     }
+
 
     public class RepHighlightCommand implements TabExecutor {
         @Override

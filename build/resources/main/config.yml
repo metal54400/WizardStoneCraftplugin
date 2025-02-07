@@ -17,6 +17,13 @@ reputation-status:
   bad: "§cMauvaise"
   horrible: "§4Horrible"
 
+reputation-prefixe:
+  honorable: "§dΩ Honorable§7"
+  good: "§aΩ Bonne§7"
+  neutral: "§7Ω Neutre§7"
+  dangerous: "§6Ω Dangereux§7"
+  bad: "§cΩ Mauvaise§7"
+  horrible: "§4Ω Horrible§7"
 
 reputation-prefix:
     honorable: "§dΩ"
