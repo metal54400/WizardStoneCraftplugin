@@ -93,11 +93,10 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         }
 
 
-        new TablistUpdater(this).runTaskTimer(this, 1000000000, 1000000000);
+        new TablistUpdater(this).runTaskTimer(this, 10, 10);
 
         Bukkit.getPluginManager().registerEvents(this, this);
         getCommand("repadd").setExecutor(new ManageRepCommand());
-        getCommand("repsubtract").setExecutor(new ManageRepCommand());
         getCommand("reptop").setExecutor(new ReptopCommand());
         getCommand("rep").setExecutor(new ReputationCommand());
         getCommand("rephighlight").setExecutor(new RepHighlightCommand());
@@ -105,112 +104,15 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
         getCommand("Broadcast").setExecutor(new Broadcast());
         getCommand("tabreload").setExecutor(new UpdateTablistCommand(this));
-        getCommand("repmenu").setExecutor(new Repmenu());
-
-
-    }
-    public class Repmenu implements TabExecutor {
-        public boolean repmenu(CommandSender sender, Command command, String label, String[] args)  {
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-
-                // Vérifie si le joueur est un administrateur
-                if (player.hasPermission("reputation.admin")) {
-                    openPlayerListMenu(player);
-                    return true;
-                } else {
-                    player.sendMessage("§7[§e?§7] §cVous n'avez pas la permission d'utiliser cette commande.");
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
-            return false;
-        }
-
-        @Override
-        public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
-            return List.of();
-        }
     }
 
 
 
 
-    /**
-     * Ouvre le menu de la liste des joueurs.
-     */
-    /**
-     * Ouvre le menu de la liste des joueurs pour l'administrateur.
-     */
-    public void openPlayerListMenu(Player admin) {
-        // Taille ajustée à un multiple de 9 (par exemple : 54 slots)
-        int inventorySize = 54;
-        Inventory inventory = Bukkit.createInventory(null, inventorySize, "Liste des joueurs");
 
-        // Ajoute la tête de chaque joueur en ligne
-        for (Player target : Bukkit.getOnlinePlayers()) {
-            ItemStack playerHead = new ItemStack(Material.PLAYER_HEAD);
 
-            ItemMeta meta = playerHead.getItemMeta();
-            if (meta != null) {
-                meta.setDisplayName("§e" + target.getName()); // Nom du joueur avec couleur
-                playerHead.setItemMeta(meta);
-            }
 
-            // Ajoute la tête du joueur dans l'inventaire
-            inventory.addItem(playerHead);
-        }
 
-        // Ouvre l'inventaire pour l'administrateur
-        admin.openInventory(inventory);
-    }
-
-    /**
-     * Ouvre le menu de modification de réputation pour un joueur cible.
-     */
-    public void openReputationEditMenu(Player admin, Player target) {
-        // Taille ajustée (9 slots suffisent pour ce menu)
-        Inventory inventory = Bukkit.createInventory(null, 9, "Modifier Réputation : " + target.getName());
-
-        // Item pour ajouter des points
-        ItemStack addReputation = new ItemStack(Material.GREEN_DYE);
-        ItemMeta addMeta = addReputation.getItemMeta();
-        if (addMeta != null) {
-            addMeta.setDisplayName("§aAjouter 10 points"); // Nom personnalisé
-            addReputation.setItemMeta(addMeta);
-        }
-
-        // Item pour retirer des points
-        ItemStack removeReputation = new ItemStack(Material.RED_DYE);
-        ItemMeta removeMeta = removeReputation.getItemMeta();
-        if (removeMeta != null) {
-            removeMeta.setDisplayName("§cRetirer 10 points"); // Nom personnalisé
-            removeReputation.setItemMeta(removeMeta);
-        }
-
-        // Item pour afficher la réputation actuelle
-        ItemStack currentReputation = new ItemStack(Material.PAPER);
-        ItemMeta currentMeta = currentReputation.getItemMeta();
-        if (currentMeta != null) {
-            int reputation = playerReputations.getOrDefault(target, 0); // Récupère la réputation ou 0 par défaut
-            currentMeta.setDisplayName("§aRéputation actuelle : " + reputation); // Affiche la réputation
-            currentReputation.setItemMeta(currentMeta);
-        }
-
-        // Ajoute les items dans le menu
-        inventory.setItem(3, addReputation);      // Slot 3 : Ajouter des points
-        inventory.setItem(5, removeReputation);  // Slot 5 : Retirer des points
-        inventory.setItem(4, currentReputation); // Slot 4 : Réputation actuelle
-
-        // Ouvre le menu pour l'administrateur
-        admin.openInventory(inventory);
-
-        // Stocke le joueur cible dans la map `selectedPlayers`
-        selectedPlayers.put(admin, target);
-    }
 
     @Override
     public void onDisable() {
@@ -267,147 +169,6 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             return 0; // Default reputation in case of error
         }
     }
-    @EventHandler
-    public void onInventoryStatsClick(InventoryClickEvent event) {
-        if (event.getView().getTitle().equals(ChatColor.GREEN + "Menu des Profils")) {
-            event.setCancelled(true);
-
-            ItemStack clickedItem = event.getCurrentItem();
-            if (clickedItem == null || clickedItem.getType() != Material.PLAYER_HEAD) {
-                return;
-            }
-
-            Player player = (Player) event.getWhoClicked();
-            SkullMeta skullMeta = (SkullMeta) clickedItem.getItemMeta();
-
-            if (skullMeta == null || skullMeta.getOwningPlayer() == null) {
-                return;
-            }
-
-            Player target = getPlayer(skullMeta.getOwningPlayer().getName());
-
-            if (target != null) {
-                player.sendMessage(ChatColor.AQUA + "Statistiques de " + ChatColor.YELLOW + target.getName() + ":");
-                player.sendMessage(ChatColor.GREEN + "- Argent: " + ChatColor.GOLD + econ /* Remplace par la vraie valeur */);
-                player.sendMessage(ChatColor.GREEN + "- Succès: " + ChatColor.GOLD + "10/50" /* Remplace par la vraie valeur */);
-                player.sendMessage(ChatColor.GREEN + "- Réputation: " + ChatColor.GOLD + reputation /* Remplace par la vraie valeur */);
-            }
-        }
-    }
-    @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
-        Player player = (Player) event.getWhoClicked();
-        String title = event.getView().getTitle();
-
-        // Vérifie si un item est cliqué
-        if (event.getCurrentItem() == null || event.getCurrentItem().getItemMeta() == null) {
-            return;
-        }
-
-        // Gestion du menu de la liste des joueurs
-        if (title.equals("Liste des joueurs")) {
-            event.setCancelled(true); // Empêche de prendre des objets
-
-            if (event.getCurrentItem().getType() == Material.PLAYER_HEAD) {
-                // Récupère le nom du joueur affiché
-                String targetName = event.getCurrentItem().getItemMeta().getDisplayName();
-                if (targetName.length() > 2) {
-                    targetName = targetName.substring(2); // Retire le préfixe "§e"
-                } else {
-                    player.sendMessage("§7[§e?§7]§c Nom de joueur invalide.");
-                    return;
-                }
-
-                // Récupère le joueur correspondant
-                Player target = Bukkit.getPlayerExact(targetName);
-                if (target != null) {
-                    openReputationEditMenu(player, target); // Ouvre le menu de modification pour ce joueur
-                } else {
-                    player.sendMessage("§7[§e?§7]§c Le joueur " + targetName + " n'est pas en ligne.");
-                }
-            }
-        }
-
-        // Gestion du menu de modification de réputation
-        else if (title.startsWith("§7[§e?§7]§a Modifier Réputation")) {
-            event.setCancelled(true); // Empêche de prendre des objets
-
-            // Vérifie si un joueur est sélectionné
-            if (!selectedPlayers.containsKey(player)) {
-                player.sendMessage("§7[§e?§7]§c Erreur : aucun joueur sélectionné.");
-                return;
-            }
-
-            // Récupère le joueur cible
-            Player target = selectedPlayers.get(player);
-            if (target != null) {
-                switch (event.getCurrentItem().getType()) {
-                    case GREEN_DYE -> {
-                        // Commande pour ajouter 10 points
-                        boolean success = player.performCommand("repadd " + target.getName() + "10" );
-                        if (success) {
-                            player.sendMessage("§7[§e?§7]§a 10 points de réputation ajoutés à " + target.getName() + ".");
-                        } else {
-                            player.sendMessage("§7[§e?§7]§c Échec de l'exécution de la commande.");
-                        }
-                        openReputationEditMenu(player, target);
-                        event.setCancelled(true); // Rafraîchit le menu
-                    }
-                    case RED_DYE -> {
-
-                        // Commande pour retirer 10 points
-                        boolean success = player.performCommand("repadd " + target.getName() + "-10" );
-                        if (success) {
-                            player.sendMessage("§7[§e?§7]§a 10 points de réputation retirés à " + target.getName() + ".");
-                        } else {
-                            player.sendMessage("§7[§e?§7]§c Échec de l'exécution de la commande.");
-                        }
-                        openReputationEditMenu(player, target); // Rafraîchit le menu
-                        event.setCancelled(true);
-                    }
-                    case PAPER -> {
-                        // Affiche la réputation actuelle
-                        int reputation = playerReputations.getOrDefault(target, 0);
-                        player.sendMessage("§7[§e?§7] La réputation actuelle de " + target.getName() + " est : §a" + reputation + ".");
-                        event.setCancelled(true);
-                    }
-                    default -> {
-                        // Cas d'objet inattendu
-                        player.sendMessage("§7[§e?§7]§c Action non reconnue.");
-                    }
-                }
-            } else {
-                player.sendMessage("§7[§e?§7]§c Erreur : aucun joueur sélectionné.");
-            }
-        }
-    }
-
-
-
-
-    @EventHandler
-    public void onCreativeItemMove(InventoryClickEvent event) {
-        // Vérifie que le joueur est en mode créatif
-        if (event.getWhoClicked().getGameMode() == GameMode.CREATIVE) {
-            // Vérifie si le joueur a un grade spécifique
-            if (event.getWhoClicked().hasPermission("moderator") || event.getWhoClicked().hasPermission("op")) {
-                ItemStack item = event.getCursor(); // Récupère l'objet déplacé
-                if (item != null) {
-                    ItemMeta meta = item.getItemMeta();
-                    if (meta != null) {
-                        // Récupère le lore existant (ou crée un nouveau s'il est vide)
-                        List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
-
-                        // Ajoute le nom du joueur au lore
-                        lore.add("§7Rembourcé par " + event.getWhoClicked().getName());
-                        meta.setLore(lore); // Met à jour le lore de l'objet
-                        item.setItemMeta(meta); // Applique les modifications à l'objet
-                    }
-                }
-            }
-        }
-    }
-
 
     @EventHandler
     public void onPlayerKill(PlayerDeathEvent event) {
@@ -424,8 +185,10 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             Map<UUID, Long> killerVictimHistory = killHistory.get(killerId);
 
             // Charger la réputation actuelle
-            int currentRep = reputation.getOrDefault(killerId, loadPlayerReputation(killerId));
-            int newRep = currentRep; // Variable pour la nouvelle réputation
+            pointsKill = reputation.getOrDefault(killerId, loadPlayerReputation(killerId));
+            int newRep = pointsKill; // Variable pour la nouvelle réputation
+
+
 
             // Vérifier si le tueur a déjà tué la victime en 24h
             if (killerVictimHistory.containsKey(victimId)) {
@@ -433,21 +196,20 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                 if (currentTime - lastKillTime <= 24 * 60 * 60 * 1000) { // Moins de 24h
                     newRep = Math.max(newRep - 2, MIN_REP); // Appliquer une pénalité
                     killer.sendMessage(getMessage("reputation_lost24"));
+
                 }
             }
 
             // Mettre à jour l'historique AVANT d'ajouter les points normaux
             killerVictimHistory.put(victimId, currentTime);
 
-            // Récompenser avec les points normaux
-            newRep = Math.min(newRep + pointsKill, MAX_REP);
+            // Mettre à jour la réputation
             reputation.put(killerId, newRep);
-
-            // Sauvegarder et informer le joueur
             savePlayerReputation(killerId, newRep);
             killer.sendMessage(getMessage("reputation_updated").replace("%reputation%", String.valueOf(newRep)));
         }
     }
+
 
 
 
@@ -480,14 +242,16 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
     public void updateTablist(Player player) {
         // Lire le header et footer depuis le fichier de configuration
-        String header = ChatColor.translateAlternateColorCodes('&', config.getString("tablist.header", "&aBienvenue sur le serveur"));
-        String footer = ChatColor.translateAlternateColorCodes('&', config.getString("tablist.footer", "&6Amusez-vous bien !"));
+        String header = ChatColor.translateAlternateColorCodes('&', config.getString("tablist.header"));
+        String footer = ChatColor.translateAlternateColorCodes('&', config.getString("tablist.footer"));
 
         // Mettre à jour la tablist
         player.setPlayerListHeaderFooter(header,footer);
 
         // Ajouter un préfixe basé sur la réputation dans le nom de la tablist
-        String reputationPrefix = getReputationPrefix();
+        UUID playerId = player.getUniqueId();
+        int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
+        String reputationPrefix = getReputationStatus(rep);
         String gradePrefix = getLuckPermsPrefix(player);
         player.setPlayerListName(  reputationPrefix + " "  + gradePrefix + " " + ChatColor.RESET + player.getName());
     }
@@ -522,7 +286,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         if (reputation >= 0) return getConfig().getString("reputation-status.neutral");
         if (reputation >= -50) return getConfig().getString("reputation-status.dangerous");
         if (reputation >= -100) return getConfig().getString("reputation-status.bad");
-        return getConfig().getString("reputation-status.horrible");
+        return getConfig().getString("reputation-prefix.horrible");
     }
 
 
@@ -532,7 +296,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         if (reputation >= 0) return getConfig().getString("reputation-prefix.neutral");
         if (reputation >= -50) return getConfig().getString("reputation-prefix.dangerous");
         if (reputation >= -100) return getConfig().getString("reputation-prefix.bad");
-        return getConfig().getString("reputation-status.horrible");
+        return getConfig().getString("reputation-prefix.horrible");
     }
     public String getReputationPrefixe(int reputation) {
         if (reputation >= 100) return getConfig().getString("reputation-prefixe.honorable");
@@ -645,7 +409,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
             reputation.entrySet().stream()
                     .sorted(Map.Entry.<UUID, Integer>comparingByValue().reversed())
-                    .limit(9)
+                    .limit(10)
                     .forEach(entry -> {
                         UUID playerId = entry.getKey();
                         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerId);
@@ -655,7 +419,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                         String prefix = getReputationPrefixe(reps);
 
                         // Afficher le message avec le préfixe
-                        sender.sendMessage( offlinePlayer.getName() + ": " + prefix + " " + reps + " points de Réputation");
+                        sender.sendMessage( offlinePlayer.getName() + ": " + prefix + getMessage("color:gris") + "" + reps + " points de Réputation");
                     });
 
             return true;
@@ -739,63 +503,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         }
     }
 
-    /**class ProfileCommand implements CommandExecutor {
-        @Override
-        public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-            if (!(sender instanceof Player)) {
-                sender.sendMessage("Seuls les joueurs peuvent utiliser cette commande.");
-                return true;
-            }
 
-            Player player = (Player) sender;
-            openProfileMenu(player);
-            return true;
-        }
-
-        private void openProfileMenu(Player player) {
-            Inventory profileMenu = Bukkit.createInventory(null, 9, ChatColor.GOLD + "Profil du Joueur");
-
-            ItemStack statsItem = new ItemStack(Material.PAPER);
-            ItemMeta statsMeta = statsItem.getItemMeta();
-            statsMeta.setDisplayName(ChatColor.GREEN + "Statistiques");
-            List<String> statsLore = new ArrayList<>();
-            statsLore.add(ChatColor.AQUA + "Niveau: " + player.getLevel());
-            statsLore.add(ChatColor.AQUA + "Expérience: " + player.getTotalExperience());
-            statsMeta.setLore(statsLore);
-            statsItem.setItemMeta(statsMeta);
-
-            ItemStack reputationItem = new ItemStack(Material.DIAMOND);
-            ItemMeta reputationMeta = reputationItem.getItemMeta();
-            reputationMeta.setDisplayName(ChatColor.GREEN + "Réputation");
-            List<String> reputationLore = new ArrayList<>();
-            reputationLore.add(ChatColor.AQUA + "Réputation: " + getReputation(player));
-            reputationMeta.setLore(reputationLore);
-            reputationItem.setItemMeta(reputationMeta);
-
-            ItemStack achievementsItem = new ItemStack(Material.ANVIL);
-            ItemMeta achievementsMeta = achievementsItem.getItemMeta();
-            achievementsMeta.setDisplayName(ChatColor.GREEN + "Succès");
-            List<String> achievementsLore = new ArrayList<>();
-            //achievementsLore.add(ChatColor.AQUA + "Succès débloqués: " + getAchievements(player));
-            //achievementsMeta.setLore(achievementsLore);
-            //achievementsItem.setItemMeta(achievementsMeta);
-
-            profileMenu.setItem(2, statsItem);
-            profileMenu.setItem(4, reputationItem);
-            profileMenu.setItem(6, achievementsItem);
-
-            player.openInventory(profileMenu);
-        }
-
-        private int getReputation(Player player) {
-            return (player.getLevel() * 10);
-        }
-
-        //private int getAchievements(Player player) {
-
-            //return false;  //player.getStatistic(Achievement.Enum.EnumDesc / 1000);
-        //}
-    }**/
     public int getReputation(Player player) {
         return reputation.getOrDefault(player.getUniqueId(), 0);
     }
@@ -828,8 +536,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         bannedPlayers.put(playerId, banExpiryTime);
 
         // You could save it to a file like so (example, using a YML file for persistence):
-        // config.set("bannedPlayers." + playerId.toString(), banExpiryTime);
-        // saveConfig();
+         config.set("bannedPlayers." + playerId.toString(), banExpiryTime);
+         saveConfig();
     }
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -887,6 +595,36 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             e.printStackTrace();
         }
     }
+
+    @EventHandler
+    public void onCreativeItemMove(InventoryClickEvent event) {
+        // Vérifie que le joueur est en mode créatif
+        if (event.getWhoClicked().getGameMode() == GameMode.CREATIVE) {
+            // Vérifie si le joueur a un grade spécifique
+            if (event.getWhoClicked().hasPermission("moderator") || event.getWhoClicked().hasPermission("op")) {
+                ItemStack item = event.getCursor(); // Récupère l'objet déplacé
+                if (item != null) {
+                    ItemMeta meta = item.getItemMeta();
+                    if (meta != null) {
+                        // Vérifie si l'ajout du lore est activé dans la configuration
+                        if (config.getBoolean("addLoreOnCreative", true)) { // Par défaut, c'est activé
+                            // Vérifie si le lore existe déjà
+                            List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+
+                            // Si le lore est vide, on l'ajoute
+                            if (lore.isEmpty()) {
+                                // Ajoute le nom du joueur au lore
+                                lore.add(getMessage("loreitem") + event.getWhoClicked().getName());
+                                meta.setLore(lore); // Met à jour le lore de l'objet
+                                item.setItemMeta(meta); // Applique les modifications à l'objet
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+
 
 

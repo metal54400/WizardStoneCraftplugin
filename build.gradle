@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'fr.WizardStoneCraft.WizardStoneCraft'
-version = '0.0.14-Alpha'
+version = '0.0.15.0-Alpha'
 
 
 repositories {

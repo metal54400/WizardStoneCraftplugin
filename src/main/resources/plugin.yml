@@ -1,5 +1,5 @@
 name: WizardStoneCraft
-version: '0.0.14-Alpha'
+version: '0.0.15.0-Alpha'
 main: fr.WizardStoneCraft.WizardStoneCraft
 api-version: 1.21
 
@@ -13,15 +13,6 @@ softdepend:
   - Vault
 
 commands:
-  home:
-    description: Ouvre le menu de réputation
-    usage: /home
-    permission: wizardstonecraft.home
-
-  repmenu:
-    description: Ouvre le menu de réputation
-    usage: /repmenu
-    permission: wizardstonecraft.repmenu
 
   broadcast:
     description: Envoie un message global
@@ -40,10 +31,6 @@ commands:
     aliases: [reputationadd]
     permission: wizardstonecraft.repadd
 
-  repsubtract:
-    description: Soustraire des points de réputation à un joueur.
-    usage: /repsubtract <player> <amount>
-    permission: wizardstonecraft.repsubtract
 
   reptop:
     description: Afficher le top 5 des réputations.

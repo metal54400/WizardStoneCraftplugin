@@ -6,11 +6,27 @@ no_permission: "&7[&e?&7] &cVous n'avez pas la permission d'utiliser cette comma
 player_not_found: "&7[&e?&7] &cJoueur introuvable !"
 usage: "&7[&e?&7] Usage: &7/%command% <player> <amount>"
 rep_modified: "&7[&e?&7] Modifié la réputation de %player% de %amount% points."
-reputation_status: "%liste% &7[&e?&7] %player% a  points de réputation. Statut: %rep%"
+reputation_status: "&e[&e?&e] §8Aide des Symbole de la reputation %liste% &7[&e?&7] %player% a  points de réputation. Statut: %rep%"
 top_reputations: "&7[&e?&7] Top 5 des réputations:"
 ban_message: "&f[&cBanni&f]&7 Vous étais banni 15 Jour Acause de Votre Reputation "
 messages:
 reload_success: "§7[§e?§7] Configuration et messages rechargés avec succès!"
 noperm: "§7[§e?§7] §cVous n'avez pas la permission d'utiliser cette commande"
+loreitem: "§7Remboursé par "
+color:
+  gris: "§7"
+  red: "§c"
+  hardred: "§4"
+  hardblue: "§9"
+  blue: "§d"
+  bluee: "§3"
+  yellow: "§e"
+  white: "§f"
+  orange: "§6"
+  hardgris: "§8"
+  pink: "§d"
+  hardpink: "§5"
+  green: "§a"
+  hardgreen: "§2"
 
 

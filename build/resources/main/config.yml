@@ -6,8 +6,8 @@ points-join: 4
 
 
 tablist:
-  header: "§aBienvenue sur le serveur &6MonServeur"
-  footer: "§6Amusez-vous bien sur notre serveur ! &aJoueurs en ligne : %players%"
+  header: "§aBienvenue sur le serveur &6Survie"
+  footer: "§6Amusez-vous bien sur notre serveur ! &aJoueurs en ligne : {players}"
 
 reputation-status:
   honorable: "§dHonorable"
@@ -32,6 +32,8 @@ reputation-prefix:
     dangerous: "§6Ω"
     bad: "§cΩ"
     horrible: "§4Ω"
+
+addLoreOnCreative: true  # true pour activer, false pour désactiver l'ajout du lore
 
 
 
