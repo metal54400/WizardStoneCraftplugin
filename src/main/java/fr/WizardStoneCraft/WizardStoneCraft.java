@@ -409,7 +409,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
             reputation.entrySet().stream()
                     .sorted(Map.Entry.<UUID, Integer>comparingByValue().reversed())
-                    .limit(10)
+                    .limit(9)
                     .forEach(entry -> {
                         UUID playerId = entry.getKey();
                         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerId);
@@ -419,7 +419,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                         String prefix = getReputationPrefixe(reps);
 
                         // Afficher le message avec le préfixe
-                        sender.sendMessage( offlinePlayer.getName() + ": " + prefix + getMessage("color:gris") + "" + reps + " points de Réputation");
+                        sender.sendMessage( offlinePlayer.getName() + ": " + prefix + "§7 " + reps + " points de Réputation");
                     });
 
             return true;
