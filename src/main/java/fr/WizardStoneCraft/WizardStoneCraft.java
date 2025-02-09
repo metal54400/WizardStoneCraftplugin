@@ -18,15 +18,11 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 
 import java.io.*;
@@ -74,7 +70,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         loadConfiguration();
         loadMessages();
         config = getConfig();
-        loadBannedPlayersData();
+
         WizardStoneCraft plugin = this;
 
 
@@ -539,62 +535,10 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
          config.set("bannedPlayers." + playerId.toString(), banExpiryTime);
          saveConfig();
     }
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
 
-        Player player = event.getPlayer();
-        UUID playerId = player.getUniqueId();
-        int newRep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId)) + pointsJoin;
-        reputation.put(playerId, Math.min(newRep, MAX_REP));
-        player.sendMessage(getMessage("reputation_gained"));
-        savePlayerReputation(playerId, Math.min(newRep, MAX_REP));
-        updateTabList(player);
 
-        // Check if the player is banned
-        if (bannedPlayers.containsKey(playerId)) {
-            long banExpiryTime = bannedPlayers.get(playerId);
-            long currentTime = Instant.now().getEpochSecond();
 
-            // If the current time is less than the ban expiry time, the player is still banned
-            if (currentTime < banExpiryTime) {
-                long remainingTime = banExpiryTime - currentTime;
-                long remainingDays = remainingTime / (24 * 60 * 60); // Convert to days
 
-                // Inform the player how many days are left on their ban
-                player.kickPlayer("You are banned for " + remainingDays + " more days due to your reputation.");
-                return;
-            }
-        }
-    }
-
-    public void loadBannedPlayersData() {
-        bannedPlayersFile = new File(getDataFolder(), "bannedPlayers.yml");
-        if (!bannedPlayersFile.exists()) {
-            saveResource("bannedPlayers.yml", false);
-        }
-
-        bannedPlayersConfig = YamlConfiguration.loadConfiguration(bannedPlayersFile);
-        bannedPlayers = new HashMap<>();
-
-        // Load the ban data into the map
-        for (String key : bannedPlayersConfig.getKeys(false)) {
-            UUID playerId = UUID.fromString(key);
-            long banExpiryTime = bannedPlayersConfig.getLong(key);
-            bannedPlayers.put(playerId, banExpiryTime);
-        }
-    }
-
-    public void saveBannedPlayersData() {
-        for (Map.Entry<UUID, Long> entry : bannedPlayers.entrySet()) {
-            bannedPlayersConfig.set(entry.getKey().toString(), entry.getValue());
-        }
-
-        try {
-            bannedPlayersConfig.save(bannedPlayersFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     @EventHandler
     public void onCreativeItemMove(InventoryClickEvent event) {
@@ -624,7 +568,76 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             }
         }
     }
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
+
+        // Vérifie si la réputation du joueur est inférieure ou égale à la valeur seuil
+        int newRep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId)) + pointsJoin;
+        reputation.put(playerId, Math.min(newRep, MAX_REP));
+        player.sendMessage(getMessage("reputation_gained"));
+        savePlayerReputation(playerId, Math.min(newRep, MAX_REP));
+        updateTabList(player);
+
+        // Vérifie si le système de ban automatique est activé dans la configuration
+        if (config.getBoolean("autoBanOnLowReputation", true) && newRep <= config.getInt("reputationThreshold", -120)) {
+            long banDurationSeconds = config.getInt("banDurationDays", 30) * 24 * 60 * 60; // Durée du ban en secondes
+            long banExpiryTime = Instant.now().getEpochSecond() + banDurationSeconds;
+
+            bannedPlayers.put(playerId, banExpiryTime); // Ajoute le joueur à la liste des bannis
+            saveBannedPlayersData(); // Sauvegarde des données de ban
+            player.kickPlayer("You have been banned for having a reputation of " + newRep + " or lower.");
+            return;
+        }
+
+        // Vérifie si le joueur est banni
+        if (bannedPlayers.containsKey(playerId)) {
+            long banExpiryTime = bannedPlayers.get(playerId);
+            long currentTime = Instant.now().getEpochSecond();
+
+            // Si le temps actuel est inférieur au temps d'expiration du ban, le joueur est toujours banni
+            if (currentTime < banExpiryTime) {
+                long remainingTime = banExpiryTime - currentTime;
+                long remainingDays = remainingTime / (24 * 60 * 60); // Convertir en jours
+
+                // Informe le joueur du temps restant sur son ban
+                player.kickPlayer("You are banned for " + remainingDays + " more days due to your reputation.");
+                return;
+            }
+        }
+    }
+
+    public void loadBannedPlayersData() {
+        bannedPlayersFile = new File(getDataFolder(), "bannedPlayers.yml");
+        if (!bannedPlayersFile.exists()) {
+            saveResource("bannedPlayers.yml", false);
+        }
+
+        bannedPlayersConfig = YamlConfiguration.loadConfiguration(bannedPlayersFile);
+        bannedPlayers = new HashMap<>();
+
+        // Charge les données de ban dans la map
+        for (String key : bannedPlayersConfig.getKeys(false)) {
+            UUID playerId = UUID.fromString(key);
+            long banExpiryTime = bannedPlayersConfig.getLong(key);
+            bannedPlayers.put(playerId, banExpiryTime);
+        }
+    }
+
+    public void saveBannedPlayersData() {
+        for (Map.Entry<UUID, Long> entry : bannedPlayers.entrySet()) {
+            bannedPlayersConfig.set(entry.getKey().toString(), entry.getValue());
+        }
+
+        try {
+            bannedPlayersConfig.save(bannedPlayersFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
+
 
 
 
