@@ -1,5 +1,5 @@
 name: WizardStoneCraft
-version: '0.0.15.0-Alpha'
+version: '0.0.0.1-beta'
 main: fr.WizardStoneCraft.WizardStoneCraft
 api-version: 1.21
 
@@ -11,8 +11,14 @@ softdepend:
   - LuckPerms
   - PlaceholderAPI
   - Vault
+  - BetterTeams
+  - papermc
 
 commands:
+
+  RepGui:
+    description: Voir la reputation de tous les joueur connecter depuis un menu
+    usage: /repgui
 
   broadcast:
     description: Envoie un message global

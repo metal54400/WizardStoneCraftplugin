@@ -13,20 +13,6 @@ messages:
 reload_success: "§7[§e?§7] Configuration et messages rechargés avec succès!"
 noperm: "§7[§e?§7] §cVous n'avez pas la permission d'utiliser cette commande"
 loreitem: "§7Remboursé par "
-color:
-  gris: "§7"
-  red: "§c"
-  hardred: "§4"
-  hardblue: "§9"
-  blue: "§d"
-  bluee: "§3"
-  yellow: "§e"
-  white: "§f"
-  orange: "§6"
-  hardgris: "§8"
-  pink: "§d"
-  hardpink: "§5"
-  green: "§a"
-  hardgreen: "§2"
+
 
 

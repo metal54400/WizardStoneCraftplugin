@@ -33,8 +33,13 @@ reputation-prefix:
     bad: "§cΩ"
     horrible: "§4Ω"
 
+    drop-chance: 50.0
+
+
 addLoreOnCreative: true  # true pour activer, false pour désactiver l'ajout du lore
 
-
+autoBanOnLowReputation: true  # true pour activer, false pour désactiver
+reputationThreshold: -120     # La réputation à partir de laquelle un joueur sera banni
+banDurationDays: 15           # La durée du bannissement en jours
 
 

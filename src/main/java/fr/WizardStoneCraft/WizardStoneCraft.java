@@ -2,8 +2,14 @@ package fr.WizardStoneCraft;
 
 
 
+import com.booksaw.betterTeams.Team;
+import com.booksaw.betterTeams.database.BetterTeamsDatabase;
+import com.booksaw.betterTeams.integrations.placeholder.TeamPlaceholders;
 import fr.WizardStoneCraft.Commands.*;
+import fr.WizardStoneCraft.PlaceHolderApi.PlaceHolderApi;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.milkbowl.vault.economy.Economy;
@@ -17,9 +23,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -29,15 +39,19 @@ import java.io.*;
 import java.time.Instant;
 import java.util.*;
 
+import static org.bukkit.Bukkit.getOfflinePlayerIfCached;
 import static org.bukkit.Bukkit.getPlayer;
 
 
 public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener {
 
+
+    private final Set<UUID> refundedPlayers = new HashSet<>(); // Liste des joueurs remboursés
     private File bannedPlayersFile;
+    private double dropChance;
     private FileConfiguration bannedPlayersConfig;
     private Map<UUID, Long> bannedPlayers;
-    public final Map<UUID, Integer> reputation = new HashMap<>();
+    public static final Map<UUID, Integer> reputation = new HashMap<>();
     private final Map<UUID, Map<UUID, Long>> killHistory = new HashMap<>();
     private final Map<Player, Integer> playerReputations = new HashMap<>(); // Stocke la réputation des joueurs
     private final Map<Player, Player> selectedPlayers = new HashMap<>();
@@ -49,9 +63,10 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     private FileConfiguration messages;
     private String tabPrefix;
     private String chatPrefix;
-    private FileConfiguration config;
+    public FileConfiguration config;
     private LuckPerms luckPerms;
     private static Economy econ = null;
+
 
 
 
@@ -65,19 +80,6 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
     @Override
     public void onEnable() {
-        getLogger().info("§7[§e?§7]§a ReputationPlugin activé !");
-        saveDefaultConfig();
-        loadConfiguration();
-        loadMessages();
-        config = getConfig();
-
-        WizardStoneCraft plugin = this;
-
-
-
-
-
-
 
         // Initialisation des API
         RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
@@ -89,7 +91,20 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         }
 
 
-        new TablistUpdater(this).runTaskTimer(this, 10, 10);
+
+        getLogger().info("§7[§e?§7]§a ReputationPlugin activé !");
+        saveDefaultConfig();
+        loadConfiguration();
+        loadMessages();
+        loadMessages();
+        loadMessagese();
+        config = getConfig();
+        dropChance = config.getDouble("drop-chance", 50.0) / 100.0;
+        loadBannedPlayersData();
+        PlaceHolderApi.checkPlaceholderAPI();
+        WizardStoneCraft plugin = this;
+
+        // register des commande
 
         Bukkit.getPluginManager().registerEvents(this, this);
         getCommand("repadd").setExecutor(new ManageRepCommand());
@@ -100,6 +115,10 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
         getCommand("Broadcast").setExecutor(new Broadcast());
         getCommand("tabreload").setExecutor(new UpdateTablistCommand(this));
+        getCommand("repgui").setExecutor(new RepGui());
+
+        //tab updater
+        new TablistUpdater(this).runTaskTimer(this, 10, 10);
     }
 
 
@@ -166,45 +185,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         }
     }
 
-    @EventHandler
-    public void onPlayerKill(PlayerDeathEvent event) {
-        Player victim = event.getEntity();
-        Player killer = victim.getKiller();
-
-        if (killer != null) {
-            UUID killerId = killer.getUniqueId();
-            UUID victimId = victim.getUniqueId();
-            long currentTime = System.currentTimeMillis();
-
-            // Initialiser l'historique du tueur si inexistant
-            killHistory.putIfAbsent(killerId, new HashMap<>());
-            Map<UUID, Long> killerVictimHistory = killHistory.get(killerId);
-
-            // Charger la réputation actuelle
-            pointsKill = reputation.getOrDefault(killerId, loadPlayerReputation(killerId));
-            int newRep = pointsKill; // Variable pour la nouvelle réputation
 
 
-
-            // Vérifier si le tueur a déjà tué la victime en 24h
-            if (killerVictimHistory.containsKey(victimId)) {
-                long lastKillTime = killerVictimHistory.get(victimId);
-                if (currentTime - lastKillTime <= 24 * 60 * 60 * 1000) { // Moins de 24h
-                    newRep = Math.max(newRep - 2, MIN_REP); // Appliquer une pénalité
-                    killer.sendMessage(getMessage("reputation_lost24"));
-
-                }
-            }
-
-            // Mettre à jour l'historique AVANT d'ajouter les points normaux
-            killerVictimHistory.put(victimId, currentTime);
-
-            // Mettre à jour la réputation
-            reputation.put(killerId, newRep);
-            savePlayerReputation(killerId, newRep);
-            killer.sendMessage(getMessage("reputation_updated").replace("%reputation%", String.valueOf(newRep)));
-        }
-    }
 
 
 
@@ -218,21 +200,17 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         UUID playerId = player.getUniqueId();
         int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
         String prefix = getReputationStatus(rep);
-        String tabName = prefix + " " + ChatColor.RESET + player.getName();
+        int weight = getLuckPermsWeight(playerId);
+        String tabName = ChatColor.GRAY + prefix + "[" + weight + "] " + " " + ChatColor.RESET + player.getName();
         player.setPlayerListName(tabName);
     }
-
-    @EventHandler
-    public void onPlayerChat(AsyncPlayerChatEvent event) {
-        Player player = event.getPlayer();
-        UUID playerId = player.getUniqueId();
-        int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
-        String prefix = getReputationStatus(rep);
-        String gradePrefix = getLuckPermsPrefix(player);
-        event.setFormat(prefix + " " + gradePrefix + " " + ChatColor.RESET + "<%1$s> %2$s");
-        Player players = event.getPlayer();
-
+    private int getLuckPermsWeight(UUID playerId) {
+        LuckPerms luckPerms = LuckPermsProvider.get();
+        User user = luckPerms.getUserManager().getUser(playerId);
+        if (user == null) return 0;
+        return user.getCachedData().getMetaData().getSuffixes().size();
     }
+
 
 
 
@@ -249,7 +227,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
         String reputationPrefix = getReputationStatus(rep);
         String gradePrefix = getLuckPermsPrefix(player);
-        player.setPlayerListName(  reputationPrefix + " "  + gradePrefix + " " + ChatColor.RESET + player.getName());
+        player.setPlayerListName(  reputationPrefix + " "  + gradePrefix  + " " + ChatColor.RESET + player.getName());
     }
 
     /**
@@ -280,9 +258,10 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         if (reputation >= 100) return getConfig().getString("reputation-status.honorable");
         if (reputation >= 50) return getConfig().getString("reputation-status.good");
         if (reputation >= 0) return getConfig().getString("reputation-status.neutral");
-        if (reputation >= -50) return getConfig().getString("reputation-status.dangerous");
-        if (reputation >= -100) return getConfig().getString("reputation-status.bad");
-        return getConfig().getString("reputation-prefix.horrible");
+        if (reputation >= -10) return getConfig().getString("reputation-status.dangerous");
+        if (reputation >= -50) return getConfig().getString("reputation-status.bad");
+        if (reputation >= -100) return getConfig().getString("reputation-prefix.horrible");
+        return "";
     }
 
 
@@ -290,17 +269,20 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         if (reputation >= 100) return getConfig().getString("reputation-prefix.honorable");
         if (reputation >= 50) return getConfig().getString("reputation-prefix.good");
         if (reputation >= 0) return getConfig().getString("reputation-prefix.neutral");
-        if (reputation >= -50) return getConfig().getString("reputation-prefix.dangerous");
-        if (reputation >= -100) return getConfig().getString("reputation-prefix.bad");
-        return getConfig().getString("reputation-prefix.horrible");
+        if (reputation >= -10) return getConfig().getString("reputation-prefix.dangerous");
+        if (reputation >= -50) return getConfig().getString("reputation-prefix.bad");
+        if (reputation >= -100) return getConfig().getString("reputation-prefix.horrible");
+
+        return "";
     }
     public String getReputationPrefixe(int reputation) {
         if (reputation >= 100) return getConfig().getString("reputation-prefixe.honorable");
         if (reputation >= 50) return getConfig().getString("reputation-prefixe.good");
         if (reputation >= 0) return getConfig().getString("reputation-prefixe.neutral");
-        if (reputation >= -50) return getConfig().getString("reputation-prefixe.dangerous");
-        if (reputation >= -100) return getConfig().getString("reputation-prefixe.bad");
-        return getConfig().getString("reputation-status.horrible");
+        if (reputation >= -10) return getConfig().getString("reputation-prefixe.dangerous");
+        if (reputation >= -50) return getConfig().getString("reputation-prefixe.bad");
+        if (reputation >= -100) return getConfig().getString("reputation-prefixe.horrible");
+        return "";
     }
     private String getLuckPermsPrefix(Player player) {
         if (luckPerms == null) return ""; // LuckPerms non configuré
@@ -334,6 +316,16 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                 sender.sendMessage(getMessage("player_not_found"));
                 return true;
             }
+            if (!(sender instanceof Player) && args[0].contains("%player%")) {
+                sender.sendMessage(getMessage("console_cannot_use_placeholder"));
+                return true;
+            }
+
+            // Remplacer le placeholder avec PlaceholderAPI
+            if (sender instanceof Player) {
+                targetPlayer = PlaceHolderApi.parse((Player) sender, targetPlayer);
+            }
+
 
             int amount = Integer.parseInt(args[1]);
             UUID targetId = target.getUniqueId();
@@ -368,14 +360,26 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             }
 
             String targetPlayer = args[0];
+
+            UUID targetId;
+            String targetName;
+
             Player target = getPlayer(targetPlayer);
             if (target == null) {
                 sender.sendMessage(getMessage("player_not_found"));
                 return true;
+            } else {
+            OfflinePlayer offlineTarget = Bukkit.getOfflinePlayer(targetPlayer);
+            if (!offlineTarget.hasPlayedBefore()) {
+                sender.sendMessage(getMessage("player_not_found"));
+                return true;
             }
+            targetId = offlineTarget.getUniqueId();
+            targetName = offlineTarget.getName();
+        }
+            UUID targetid = target.getUniqueId();
 
-            UUID targetId = target.getUniqueId();
-            int rep = reputation.getOrDefault(targetId, loadPlayerReputation(targetId));
+            int rep = reputation.getOrDefault(targetid, loadPlayerReputation(targetid));
             String status = getReputationStatus(rep);
             sender.sendMessage(getMessage("reputation_status")
                     .replace("%player%", target.getName())
@@ -383,12 +387,12 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                     .replace("%reputation%", String.valueOf(rep))
                     .replace("%liste%", "" +
                             "\n"+
-                            "§dΩ Honorable\n" +
-                            "§aΩ Bonne\n" +
-                            "§7Ω Neutre\n" +
-                            "§6Ω Dangereux\n" +
-                            "§cΩ Mauvaise\n" +
-                            "§4Ω Horrible\n"+
+                            "§dΩ Honorable§F = 100§7\n" +
+                            "§aΩ Bonne§f = 50§7 \n" +
+                            "§7Ω Neutre§f = 0§7\n" +
+                            "§6Ω Dangereux§f = -10§7\n" +
+                            "§cΩ Mauvaise§f = -50§7\n" +
+                            "§4Ω Horrible§f = -100§7\n"+
                             "\n")
                     .replace("%status%", status));
 
@@ -399,13 +403,13 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     }
 
     public class ReptopCommand implements TabExecutor {
+
         @Override
         public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
             sender.sendMessage(getMessage("top_reputations"));
 
             reputation.entrySet().stream()
                     .sorted(Map.Entry.<UUID, Integer>comparingByValue().reversed())
-                    .limit(9)
                     .forEach(entry -> {
                         UUID playerId = entry.getKey();
                         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerId);
@@ -540,34 +544,52 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
 
 
-    @EventHandler
-    public void onCreativeItemMove(InventoryClickEvent event) {
-        // Vérifie que le joueur est en mode créatif
-        if (event.getWhoClicked().getGameMode() == GameMode.CREATIVE) {
-            // Vérifie si le joueur a un grade spécifique
-            if (event.getWhoClicked().hasPermission("moderator") || event.getWhoClicked().hasPermission("op")) {
-                ItemStack item = event.getCursor(); // Récupère l'objet déplacé
-                if (item != null) {
-                    ItemMeta meta = item.getItemMeta();
-                    if (meta != null) {
-                        // Vérifie si l'ajout du lore est activé dans la configuration
-                        if (config.getBoolean("addLoreOnCreative", true)) { // Par défaut, c'est activé
-                            // Vérifie si le lore existe déjà
-                            List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
 
-                            // Si le lore est vide, on l'ajoute
-                            if (lore.isEmpty()) {
-                                // Ajoute le nom du joueur au lore
-                                lore.add(getMessage("loreitem") + event.getWhoClicked().getName());
-                                meta.setLore(lore); // Met à jour le lore de l'objet
-                                item.setItemMeta(meta); // Applique les modifications à l'objet
-                            }
-                        }
-                    }
-                }
+
+
+//event
+@EventHandler
+public void onPlayerDeath(PlayerDeathEvent event) {
+    Player player = event.getEntity();
+    if (new Random().nextDouble() < dropChance) {
+        ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
+        SkullMeta meta = (SkullMeta) skull.getItemMeta();
+        if (meta != null) {
+            meta.setOwningPlayer(player);
+            skull.setItemMeta(meta);
+        }
+        player.getWorld().dropItemNaturally(player.getLocation(), skull);
+    }
+}
+    @EventHandler
+    public void onPlayerKill(PlayerDeathEvent event) {
+        Player victim = event.getEntity();
+        Player killer = victim.getKiller();
+
+        if (killer != null) {
+            UUID killerId = killer.getUniqueId();
+
+            // Charger la réputation actuelle
+            int pointsKill = reputation.getOrDefault(killerId, loadPlayerReputation(killerId));
+
+            // Appliquer une perte de réputation
+            int newRep = Math.max(pointsKill - 2, MIN_REP);
+
+            // Mettre à jour la réputation
+            reputation.put(killerId, newRep);
+            savePlayerReputation(killerId, newRep);
+
+            // Envoyer un message au joueur
+            String message = getMessage("reputation_lost");
+            if (message != null) {
+                getMessage("reputation_lost");
+            } else {
+                getMessage("reputation_lost");
             }
         }
+
     }
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
@@ -587,7 +609,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
             bannedPlayers.put(playerId, banExpiryTime); // Ajoute le joueur à la liste des bannis
             saveBannedPlayersData(); // Sauvegarde des données de ban
-            player.kickPlayer("You have been banned for having a reputation of " + newRep + " or lower.");
+            player.kickPlayer(getMessage("ban_message") + newRep);
             return;
         }
 
@@ -602,7 +624,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                 long remainingDays = remainingTime / (24 * 60 * 60); // Convertir en jours
 
                 // Informe le joueur du temps restant sur son ban
-                player.kickPlayer("You are banned for " + remainingDays + " more days due to your reputation.");
+                player.kickPlayer(getMessage("ban_message") + remainingDays);
                 return;
             }
         }
@@ -611,7 +633,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     public void loadBannedPlayersData() {
         bannedPlayersFile = new File(getDataFolder(), "bannedPlayers.yml");
         if (!bannedPlayersFile.exists()) {
-            saveResource("bannedPlayers.yml", false);
+            saveResource("bannedPlayers.yml", true);
         }
 
         bannedPlayersConfig = YamlConfiguration.loadConfiguration(bannedPlayersFile);
@@ -634,6 +656,65 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             bannedPlayersConfig.save(bannedPlayersFile);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void loadMessagese() {
+        File file = new File(getDataFolder(), "messages.yml");
+        if (!file.exists()) {
+            saveResource("messages.yml", false);
+        }
+        messages = YamlConfiguration.loadConfiguration(file);
+    }
+
+    @EventHandler
+    public void onCreativeItemMove(InventoryClickEvent event) {
+        if (event.getWhoClicked().getGameMode() == GameMode.CREATIVE) {
+            if (event.getWhoClicked().hasPermission("moderator") || event.getWhoClicked().hasPermission("op")) {
+                ItemStack item = event.getCursor();
+                if (item != null) {
+                    ItemMeta meta = item.getItemMeta();
+                    if (meta != null) {
+                        if (config.getBoolean("addLoreOnCreative", true)) {
+                            List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+                            if (lore.isEmpty()) {
+                                lore.add(getMessage("loreitem") + event.getWhoClicked().getName());
+                                meta.setLore(lore);
+                                item.setItemMeta(meta);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    public void addRefundedPlayer(Player player) {
+        refundedPlayers.add(player.getUniqueId());
+    }
+
+    // Enlever un joueur de la liste des remboursés (si nécessaire)
+    public void removeRefundedPlayer(Player player) {
+        refundedPlayers.remove(player.getUniqueId());
+    }
+
+    @EventHandler
+    public void onPlayerChat(AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
+        int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
+        String prefix = getReputationStatus(rep);
+        String gradePrefix = getLuckPermsPrefix(player);
+        event.setFormat(prefix + " " + gradePrefix + " " + ChatColor.RESET + "<%1$s> %2$s");
+        Player players = event.getPlayer();
+
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getView().getTitle().equals("RepGui")) {
+            event.setCancelled(true);
         }
     }
 }
