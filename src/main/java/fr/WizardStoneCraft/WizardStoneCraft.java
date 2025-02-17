@@ -7,6 +7,7 @@ import com.booksaw.betterTeams.database.BetterTeamsDatabase;
 import com.booksaw.betterTeams.integrations.placeholder.TeamPlaceholders;
 import fr.WizardStoneCraft.Commands.*;
 import fr.WizardStoneCraft.PlaceHolderApi.PlaceHolderApi;
+
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
@@ -15,17 +16,18 @@ import net.luckperms.api.model.user.User;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.command.*;
+import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.BrewEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -39,13 +41,15 @@ import java.io.*;
 import java.time.Instant;
 import java.util.*;
 
+
 import static org.bukkit.Bukkit.getOfflinePlayerIfCached;
 import static org.bukkit.Bukkit.getPlayer;
 
 
 public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener {
 
-
+    private File jobsFile;
+    private FileConfiguration jobsConfig;
     private final Set<UUID> refundedPlayers = new HashSet<>(); // Liste des joueurs remboursés
     private File bannedPlayersFile;
     private double dropChance;
@@ -73,6 +77,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
 
 
+
     @Override
     public void onLoad() {
         getLogger().info("§7[§e?§7]§a ReputationPlugin chargé !");
@@ -80,6 +85,9 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
     @Override
     public void onEnable() {
+        if (!getDataFolder().exists()) {
+            getDataFolder().mkdirs();
+        }
 
         // Initialisation des API
         RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
@@ -92,18 +100,20 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
 
 
+
+
         getLogger().info("§7[§e?§7]§a ReputationPlugin activé !");
         saveDefaultConfig();
         loadConfiguration();
         loadMessages();
         loadMessages();
+        loadConfig();
         loadMessagese();
         config = getConfig();
         dropChance = config.getDouble("drop-chance", 50.0) / 100.0;
         loadBannedPlayersData();
         PlaceHolderApi.checkPlaceholderAPI();
         WizardStoneCraft plugin = this;
-
         // register des commande
 
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -115,16 +125,115 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
         getCommand("Broadcast").setExecutor(new Broadcast());
         getCommand("tabreload").setExecutor(new UpdateTablistCommand(this));
-        getCommand("repgui").setExecutor(new RepGui());
+        getCommand("menu").setExecutor(new RepGui());
 
         //tab updater
         new TablistUpdater(this).runTaskTimer(this, 10, 10);
     }
 
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (cmd.getName().equalsIgnoreCase("jobsstatue") && sender instanceof Player) {
+            Player player = (Player) sender;
+            sender.sendMessage("\u00a76[Jobs] \u00a7fStatut de vos métiers :");
+            for (String job : new String[]{"mineur", "bucheron", "chasseur", "alchimiste", "pêcheur"}) {
+                int level = getJobXp(job + ".level", 0);
+                int xp = getJobXp(job + ".xp", 0);
+                sender.sendMessage("\u00a76" + job + " : \u00a7fNiveau " + level + " (" + xp + " XP)");
+            }
+            return true;
+        }
+        return false;
+    }
 
 
+    private void loadConfig() {
+        jobsFile = new File(getDataFolder(), "jobs.yml");
+        if (!jobsFile.exists()) {
+            saveResource("jobs.yml", false);
+        }
+        jobsConfig = YamlConfiguration.loadConfiguration(jobsFile);
+    }
 
+    private int getJobXp(String jobPath, int defaultValue) {
+        return jobsConfig.getInt(jobPath, defaultValue);
+    }
 
+    private void addXp(Player player, String job, int xp) {
+        UUID uuid = player.getUniqueId();
+        File playerFile = new File(getDataFolder() + "/jobs/", uuid + "_jobs.dat");
+        if (!playerFile.getParentFile().exists()) {
+            playerFile.getParentFile().mkdirs();
+        }
+        YamlConfiguration playerData = YamlConfiguration.loadConfiguration(playerFile);
+
+        int currentXp = playerData.getInt(job + ".xp", 0) + xp;
+        int currentLevel = playerData.getInt(job + ".level", 0);
+        int xpToNextLevel = (int) (100 * Math.pow(1.15, currentLevel)); // XP progressif ajusté
+
+        while (currentXp >= xpToNextLevel && currentLevel < 200) {
+            currentXp -= xpToNextLevel;
+            currentLevel++;
+            player.sendMessage("\u00a76[Jobs] \u00a7fFélicitations ! Vous avez atteint le niveau " + currentLevel + " en " + job + "!");
+            giveReward(player, job, currentLevel);
+            xpToNextLevel = (int) (100 * Math.pow(1.15, currentLevel));
+        }
+
+        playerData.set(job + ".xp", currentXp);
+        playerData.set(job + ".level", currentLevel);
+
+        try {
+            playerData.save(playerFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void giveReward(Player player, String job, int level) {
+        List<ItemStack> rewards = new ArrayList<>();
+        switch (job) {
+            case "mineur":
+                rewards.add(new ItemStack(Material.STONE, level));
+                if (level == 10) rewards.add(new ItemStack(Material.IRON_INGOT, 5));
+                if (level == 25) rewards.add(new ItemStack(Material.GOLD_INGOT, 3));
+                if (level == 50) rewards.add(new ItemStack(Material.DIAMOND, 2));
+                if (level == 100) rewards.add(new ItemStack(Material.NETHERITE_INGOT, 1));
+                break;
+            case "bucheron":
+                rewards.add(new ItemStack(Material.OAK_LOG, level));
+                if (level == 10) rewards.add(new ItemStack(Material.STONE_AXE, 1));
+                if (level == 25) rewards.add(new ItemStack(Material.IRON_AXE, 1));
+                if (level == 50) rewards.add(new ItemStack(Material.DIAMOND_AXE, 1));
+                if (level == 100) rewards.add(new ItemStack(Material.NETHERITE_AXE, 1));
+                break;
+            case "chasseur":
+                rewards.add(new ItemStack(Material.BONE, level));
+                if (level == 10) rewards.add(new ItemStack(Material.BOW, 1));
+                if (level == 25) rewards.add(new ItemStack(Material.ARROW, 20));
+                if (level == 50) rewards.add(new ItemStack(Material.ENCHANTED_GOLDEN_APPLE, 1));
+                if (level == 100) rewards.add(new ItemStack(Material.NETHERITE_SWORD, 1));
+                break;
+            case "alchimiste":
+                rewards.add(new ItemStack(Material.GLASS_BOTTLE, level));
+                if (level == 10) rewards.add(new ItemStack(Material.BREWING_STAND, 1));
+                if (level == 25) rewards.add(new ItemStack(Material.BLAZE_POWDER, 5));
+                if (level == 50) rewards.add(new ItemStack(Material.GHAST_TEAR, 3));
+                if (level == 100) rewards.add(new ItemStack(Material.DRAGON_BREATH, 1));
+                break;
+            case "pêcheur":
+                rewards.add(new ItemStack(Material.COD, level));
+                if (level == 10) rewards.add(new ItemStack(Material.FISHING_ROD, 1));
+                if (level == 25) rewards.add(new ItemStack(Material.LILY_PAD, 5));
+                if (level == 50) rewards.add(new ItemStack(Material.HEART_OF_THE_SEA, 1));
+                if (level == 100) rewards.add(new ItemStack(Material.TRIDENT, 1));
+                break;
+        }
+        for (ItemStack reward : rewards) {
+            player.getInventory().addItem(reward);
+        }
+        if (!rewards.isEmpty()) {
+            player.sendMessage("\u00a76[Jobs] \u00a7fVous avez reçu une récompense pour votre montée en niveau !");
+        }
+    }
 
 
 
@@ -160,7 +269,16 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
 
     void savePlayerReputation(UUID playerId, int rep) {
-        File playerFile = new File(getDataFolder(), playerId + ".dat");
+        // Définition du fichier de réputation du joueur dans le dossier 'rep/'
+        File repFolder = new File(getDataFolder(), "rep");
+
+        // Créer le dossier 'rep/' s'il n'existe pas
+        if (!repFolder.exists()) {
+            repFolder.mkdirs(); // Crée le dossier 'rep/' si il n'existe pas encore
+        }
+
+        File playerFile = new File(repFolder, playerId + ".dat");
+
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(playerFile))) {
             oos.writeObject(rep);
             getLogger().info("Réputation du joueur " + playerId + " sauvegardée avec succès dans " + playerId + ".dat.");
@@ -169,19 +287,29 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             e.printStackTrace();
         }
     }
-
     int loadPlayerReputation(UUID playerId) {
-        File playerFile = new File(getDataFolder(), playerId + ".dat");
+        // Définition du dossier 'rep/' où le fichier de réputation est stocké
+        File repFolder = new File(getDataFolder(), "rep");
+
+        // Vérifier si le dossier existe
+        if (!repFolder.exists()) {
+            getLogger().warning("Le dossier 'rep/' est introuvable.");
+            return 0; // Réputation par défaut si le dossier est introuvable
+        }
+
+        // Fichier de réputation du joueur
+        File playerFile = new File(repFolder, playerId + ".dat");
+
         if (!playerFile.exists()) {
             getLogger().warning("Fichier " + playerId + ".dat introuvable. Initialisation de la réputation par défaut.");
-            return 0; // Default reputation
+            return 0; // Réputation par défaut si le fichier n'existe pas
         }
 
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(playerFile))) {
             return (int) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
-            return 0; // Default reputation in case of error
+            return 0; // Réputation par défaut en cas d'erreur
         }
     }
 
@@ -227,7 +355,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
         String reputationPrefix = getReputationStatus(rep);
         String gradePrefix = getLuckPermsPrefix(player);
-        player.setPlayerListName(  reputationPrefix + " "  + gradePrefix  + " " + ChatColor.RESET + player.getName());
+        player.setPlayerListName(  reputationPrefix + " "  + gradePrefix + ChatColor.RESET + player.getName());
     }
 
     /**
@@ -667,26 +795,53 @@ public void onPlayerDeath(PlayerDeathEvent event) {
         messages = YamlConfiguration.loadConfiguration(file);
     }
 
+
+
+
+
+
+    /**
+     * ✅ Ajoute "Remboursé par <NomDuStaff>" sur les items placés ou déplacés en mode créatif.
+     */
     @EventHandler
     public void onCreativeItemMove(InventoryClickEvent event) {
-        if (event.getWhoClicked().getGameMode() == GameMode.CREATIVE) {
-            if (event.getWhoClicked().hasPermission("moderator") || event.getWhoClicked().hasPermission("op")) {
-                ItemStack item = event.getCursor();
-                if (item != null) {
-                    ItemMeta meta = item.getItemMeta();
-                    if (meta != null) {
-                        if (config.getBoolean("addLoreOnCreative", true)) {
-                            List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
-                            if (lore.isEmpty()) {
-                                lore.add(getMessage("loreitem") + event.getWhoClicked().getName());
-                                meta.setLore(lore);
-                                item.setItemMeta(meta);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+
+        // Vérifie si le joueur est en mode créatif et a la permission
+        if (player.getGameMode() != GameMode.CREATIVE) return;
+        if (!player.hasPermission("moderator") && !player.hasPermission("op")) return;
+
+        // Vérifie si l'option est activée dans la config
+        if (config == null || !config.getBoolean("addLoreOnCreative", true)) return;
+
+        // Récupère l'item déplacé
+        ItemStack cursorItem = event.getCursor();   // Item tenu par la souris
+        ItemStack currentItem = event.getCurrentItem(); // Item dans l'inventaire
+
+        if (cursorItem != null) applyRefundLore(player, cursorItem);
+        if (currentItem != null) applyRefundLore(player, currentItem);
+    }
+
+    /**
+     * ✅ Applique la mention "Remboursé par <NomDuStaff>" sur l'item en remplaçant le lore existant.
+     */
+    private void applyRefundLore(Player player, ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) return;
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(item.getType());
+        if (meta == null) return; // Impossible de modifier cet item
+
+        String staffName = player.getName();
+        String loreMessage = getMessage("loreitem") + staffName;
+
+        // Remplace le lore existant par un seul message
+        List<String> lore = new ArrayList<>();
+        lore.add(loreMessage);
+        meta.setLore(lore);
+        item.setItemMeta(meta);
+
+        Bukkit.getLogger().info("[ItemsLog] Un item a été remboursé par " + staffName);
     }
 
 
@@ -706,18 +861,140 @@ public void onPlayerDeath(PlayerDeathEvent event) {
         int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
         String prefix = getReputationStatus(rep);
         String gradePrefix = getLuckPermsPrefix(player);
-        event.setFormat(prefix + " " + gradePrefix + " " + ChatColor.RESET + "<%1$s> %2$s");
+        event.setFormat(prefix + " " +  ChatColor.RESET + "<%1$s> %2$s");
         Player players = event.getPlayer();
 
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+
+
         if (event.getView().getTitle().equals("RepGui")) {
             event.setCancelled(true);
         }
     }
+
+
+    @EventHandler
+    public void onGameModeChange(PlayerGameModeChangeEvent event) {
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+
+        // Vérifie si le joueur est un staff
+        if (!player.hasPermission("moderator") && !player.hasPermission("op")) {
+            return;
+        }
+
+        GameMode newGameMode = event.getNewGameMode();
+        File survivalFile = new File(getDataFolder()+ "/inv/", uuid + "_Survival.dat");
+        File creativeFile = new File(getDataFolder()+ "/inv/", uuid + "_Creative.dat");
+        File adventureFile = new File(getDataFolder()+ "/inv/", uuid + "_Adventure.dat");
+        File spectatorFile = new File(getDataFolder()+ "/inv/", uuid + "_Spectator.dat");
+
+        if (newGameMode == GameMode.CREATIVE) {
+            saveInventory(player, survivalFile);
+            saveInventory(player, adventureFile); // Sauvegarde l'inventaire de survie
+            loadInventory(player, creativeFile); // Charge l'inventaire créatif
+            Bukkit.getLogger().info("[Inventaire] " + player.getName() + " passe en Créatif (inventaire chargé).");
+
+        } else if (newGameMode == GameMode.SURVIVAL) {
+            saveInventory(player, creativeFile);  // Sauvegarde l'inventaire créatif
+            loadInventory(player, survivalFile);
+            saveInventory(player, adventureFile);
+            saveInventory(player, spectatorFile);// Charge l'inventaire de survie
+            Bukkit.getLogger().info("[Inventaire] " + player.getName() + " passe en Survie (inventaire restauré).");
+        }if (newGameMode == GameMode.ADVENTURE){
+            saveInventory(player, survivalFile);
+            saveInventory(player, creativeFile); // Sauvegarde l'inventaire de survie
+            loadInventory(player, adventureFile);
+            saveInventory(player, spectatorFile);// Charge l'inventaire créatif
+            Bukkit.getLogger().info("[Inventaire] " + player.getName() + " passe en Adventure (inventaire chargé).");
+
+        }
+        if (newGameMode == GameMode.SPECTATOR){
+            saveInventory(player, survivalFile);
+            saveInventory(player, creativeFile); // Sauvegarde l'inventaire de survie
+            loadInventory(player, spectatorFile);
+            saveInventory(player, adventureFile);// Charge l'inventaire créatif
+            Bukkit.getLogger().info("[Inventaire] " + player.getName() + " passe en Specrator (inventaire chargé).");
+
+        }
+    }
+
+    private void saveInventory(Player player, File file) {
+        YamlConfiguration config = new YamlConfiguration();
+        config.set("inventory", player.getInventory().getContents());
+
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadInventory(Player player, File file) {
+        if (!file.exists()) {
+            player.getInventory().clear(); // Vide l'inventaire si aucun fichier trouvé
+            return;
+        }
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        List<?> items = config.getList("inventory");
+        if (items != null) {
+            player.getInventory().setContents(items.toArray(new ItemStack[0]));
+        }
+    }
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        Material blockType = event.getBlock().getType();
+
+        if (blockType.toString().contains("ORE")) {
+            int xp = getJobXp("jobs.mineur.xp_per_block", 10);
+            addXp(player, "mineur", xp);
+            player.sendMessage("\u00a76[Jobs] \u00a7f+" + xp + " XP pour avoir miné du minerai !");
+        } else if (blockType.toString().contains("LOG")) {
+            int xp = getJobXp("jobs.bucheron.xp_per_block", 10);
+            addXp(player, "bucheron", xp);
+            player.sendMessage("\u00a76[Jobs] \u00a7f+" + xp + " XP pour avoir coupé du bois !");
+        }
+    }
+
+    @EventHandler
+    public void onEntityKill(EntityDeathEvent event) {
+        Player player = event.getEntity().getKiller();
+        if (player != null) {
+            int xp = getJobXp("jobs.chasseur.xp_per_mob", 20);
+            addXp(player, "chasseur", xp);
+            player.sendMessage("\u00a76[Jobs] \u00a7f+" + xp + " XP pour avoir tué une créature !");
+        }
+    }
+
+    @EventHandler
+    public void onBrewPotion(BrewEvent event) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getOpenInventory().getTopInventory().equals(event.getContents())) {
+                int xp = getJobXp("jobs.alchimiste.xp_per_potion", 15);
+                addXp(player, "alchimiste", xp);
+                player.sendMessage("\u00a76[Jobs] \u00a7f+" + xp + " XP pour avoir fabriqué une potion !");
+            }
+        }
+    }
+
+    @EventHandler
+    public void onFish(PlayerFishEvent event) {
+        Player player = event.getPlayer();
+        if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
+            int xp = getJobXp("jobs.pêcheur.xp_per_fish", 15);
+            addXp(player, "pêcheur", xp);
+            player.sendMessage("\u00a76[Jobs] \u00a7f+" + xp + " XP pour avoir pêché un poisson !");
+        }
+    }
 }
+
+
+
 
 
 

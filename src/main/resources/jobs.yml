@@ -1,0 +1,11 @@
+jobs:
+  mineur:
+    xp_per_block: 10
+  bucheron:
+    xp_per_block: 10
+  chasseur:
+    xp_per_mob: 20
+  alchimiste:
+    xp_per_potion: 15
+  pêcheur:
+    xp_per_fish: 15

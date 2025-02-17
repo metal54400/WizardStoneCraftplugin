@@ -1,5 +1,5 @@
 name: WizardStoneCraft
-version: '0.0.0.1-beta'
+version: '0.0.0.5-beta'
 main: fr.WizardStoneCraft.WizardStoneCraft
 api-version: 1.21
 
@@ -15,10 +15,13 @@ softdepend:
   - papermc
 
 commands:
-
-  RepGui:
+ jobsstatue:
     description: Voir la reputation de tous les joueur connecter depuis un menu
-    usage: /repgui
+    usage: /jobsstatue
+
+  menu:
+    description: Voir la reputation de tous les joueur connecter depuis un menu
+    usage: /menu
 
   broadcast:
     description: Envoie un message global
