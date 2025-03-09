@@ -1,5 +1,5 @@
 name: WizardStoneCraft
-version: '0.0.0.7'
+version: '0.0.0.8'
 main: fr.WizardStoneCraft.WizardStoneCraft
 api-version: 1.21
 
@@ -26,18 +26,6 @@ commands:
     description: Dé-mute un joueur.
     usage: /repunmute <joueur>
     permission: wizardstonecraft.unmute
-
-  tpa:
-    description: Demander une téléportation.
-    usage: /tpa <joueur>
-
-  tpyes:
-    description: Accepter une demande de téléportation.
-    usage: /tpyes
-
-  tpno:
-    description: Refuser une demande de téléportation.
-    usage: /tpno
 
   repmute:
     description: Mute un joueur.

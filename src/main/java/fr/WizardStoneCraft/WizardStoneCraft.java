@@ -103,6 +103,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     );
     public List<MerchantRecipe> dailyDeals = new ArrayList<>();
     public LocalDate lastUpdate = LocalDate.now();
+    private final List<String> blockedCommands = Arrays.asList("/tpa", "/tpahere", "/tpno", "/sethome", "/team sethome");
 
 
     @Override
@@ -166,9 +167,6 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("repunmute").setExecutor(new RepUnmuteCommand(mutedPlayers));
         getCommand("passifset").setExecutor(new PassiveCommand());
         getCommand("passifunset").setExecutor(new PassiveCommand());
-        this.getCommand("tpa").setExecutor(new TeleportCommands());
-        this.getCommand("tpyes").setExecutor(new TeleportCommands());
-        this.getCommand("tpno").setExecutor(new TeleportCommands());
         getCommand("repmute").setExecutor(new RepUnmuteCommand(mutedPlayers));
         getCommand("affairenpc").setExecutor(new npcaffaire());
 
@@ -201,6 +199,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         }
         return true;
     }
+
 
     private void spawnPacificateur(Location location) {
         World world = location.getWorld();
@@ -1537,6 +1536,38 @@ public void onPlayerDeath(PlayerDeathEvent event) {
     private boolean isInClaim(Location loc) {
         Claim claim = GriefPrevention.instance.dataStore.getClaimAt(loc, false, null);
         return claim != null;
+    }
+
+    @EventHandler
+    public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
+        String command = event.getMessage().toLowerCase().split(" ")[0]; // Récupère juste la commande
+
+        if (blockedCommands.contains(command)) {
+            int reputation = getReputation(event.getPlayer()); // Obtenir la réputation du joueur
+
+            if (reputation <= -50) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(ChatColor.RED + "§e[§e?§e]§c Votre réputation est trop basse pour utiliser cette commande !");
+            }
+        }
+    }
+    @EventHandler
+    public void onCommandPreprocesss(PlayerCommandPreprocessEvent event) {
+        String[] args = event.getMessage().toLowerCase().split(" ");
+        String command = args[0];
+
+        // Vérifie si c'est une commande de téléportation
+        if (command.equals("/tpa") || command.equals("/tpahere")) {
+            if (args.length < 2) return; // Vérifie s'il y a bien un pseudo après la commande
+
+            Player sender = event.getPlayer();
+            Player target = getServer().getPlayer(args[1]); // Récupère le joueur cible
+
+            if (target != null && getReputation(target.getPlayer()) <= -100) {
+                event.setCancelled(true);
+                sender.sendMessage(ChatColor.RED + "§e[§e?§e]§c Vous ne pouvez pas vous téléporter à " + target.getName() + " car il a une mauvaise réputation !");
+            }
+        }
     }
 }
 
