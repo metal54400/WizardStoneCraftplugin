@@ -1,35 +1,73 @@
 name: WizardStoneCraft
-version: '0.0.0.5-beta'
+version: '0.0.0.5'
 main: fr.WizardStoneCraft.WizardStoneCraft
 api-version: 1.21
 
-description: Plugin Principal de WizardStoneCraft
-author: Metal54400 and MetalGames - studio
-website: http://5.48.143.126:25565
-softdepend:
-  - EssentialsX
+description: 'Plugin Qui permet de gérer les Joueurs, permettant aussi de faire quelques ajustements'
+author: 'Metal54400 and MetalGames - studio'
+website: none
+depend:
   - LuckPerms
   - PlaceholderAPI
+
+softdepend:
+  - EssentialsX
   - Vault
   - BetterTeams
   - papermc
 
 commands:
- jobsstatue:
-    description: Voir la reputation de tous les joueur connecter depuis un menu
+  repunmute:
+    description: Dé-mute un joueur.
+    usage: /repunmute <joueur>
+    permission: wizardstonecraft.unmute
+
+  tpa:
+    description: Demander une téléportation.
+    usage: /tpa <joueur>
+
+  tpyes:
+    description: Accepter une demande de téléportation.
+    usage: /tpyes
+
+  tpno:
+    description: Refuser une demande de téléportation.
+    usage: /tpno
+
+  repmute:
+    description: Mute un joueur.
+    usage: /repmute <joueur>
+    permission: wizardstonecraft.mute
+    permission-message: Vous n'avez pas la permission d'utiliser cette commande.
+
+  passifset:
+    description: Active le mode passif pour le joueur.
+    permission: passif.manage
+
+  passifunset:
+    description: Désactive le mode passif pour le joueur.
+    permission: passif.manage
+
+  repspawnnpc:
+    description: Invoque le NPC Pacificateur à la position du joueur.
+    usage: /repspawnnpc
+    permission: wizardstonecraft.repspawnnpc
+
+  jobsstatue:
+    description: Voir la réputation de tous les joueurs connectés depuis un menu.
     usage: /jobsstatue
 
-  menu:
-    description: Voir la reputation de tous les joueur connecter depuis un menu
+  repmenu:
+    description: Voir la réputation de tous les joueurs connectés depuis un menu.
     usage: /menu
 
   broadcast:
-    description: Envoie un message global
+    description: Envoie un message global.
     usage: /broadcast
     permission: wizardstonecraft.broadcast
 
   repreload:
-    description: Recharge la configuration de la réputation
+    description: Recharge la configuration de la réputation.
     usage: /repreload
     aliases: [reputationreload]
     permission: wizardstonecraft.repreload
@@ -40,27 +78,24 @@ commands:
     aliases: [reputationadd]
     permission: wizardstonecraft.repadd
 
-
   reptop:
     description: Afficher le top 5 des réputations.
     usage: /reptop
     aliases: [reputationTop]
-
 
   rep:
     description: Afficher les informations de réputation d'un joueur.
     usage: /rep <player>
     aliases: [reputation]
 
-
-  help:
-    description: Affiche l'aide sur la réputation
+  rephelp:
+    description: Affiche l'aide sur la réputation.
     usage: /help
     aliases: [aide]
     permission: wizardstonecraft.help
 
   tabreload:
-    description: Recharge la configuration du tablist
+    description: Recharge la configuration du tablist.
     usage: /tabreload
     permission: wizardstonecraft.tabreload
 
@@ -76,4 +111,44 @@ permissions:
 
   wizardstonecraft.broadcast:
     description: Permet d'envoyer des messages globaux.
+    default: op
+
+  wizardstonecraft.repspawnnpc:
+    description: Permission pour utiliser la commande /repspawnnpc
+    default: op
+
+  passif.manage:
+    description: "Permet aux administrateurs d'activer ou de désactiver le mode passif."
+    default: op
+
+  wizardstonecraft.unmute:
+    description: Permet de démuter un joueur.
+    default: op
+
+  wizardstonecraft.mute:
+    description: Permet de muter un joueur.
+    default: op
+
+  wizardstonecraft.repreload:
+    description: Permet de recharger la configuration de la réputation.
+    default: op
+
+  wizardstonecraft.repadd:
+    description: Permet d'ajouter des points de réputation à un joueur.
+    default: op
+
+  wizardstonecraft.rep:
+    description: Permet de consulter la réputation d'un joueur.
+    default: op
+
+  wizardstonecraft.help:
+    description: Permet d'afficher l'aide sur les commandes de réputation.
+    default: op
+
+  wizardstonecraft.tabreload:
+    description: Permet de recharger la configuration du tablist.
+    default: op
+
+  wizardstonecraft.rephighlight:
+    description: Permet de mettre en évidence la réputation d'un joueur.
     default: op

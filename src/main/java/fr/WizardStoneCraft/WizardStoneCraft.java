@@ -2,32 +2,31 @@ package fr.WizardStoneCraft;
 
 
 
-import com.booksaw.betterTeams.Team;
-import com.booksaw.betterTeams.database.BetterTeamsDatabase;
-import com.booksaw.betterTeams.integrations.placeholder.TeamPlaceholders;
 import fr.WizardStoneCraft.Commands.*;
 import fr.WizardStoneCraft.PlaceHolderApi.PlaceHolderApi;
 
-import me.clip.placeholderapi.PlaceholderAPI;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.command.*;
-import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.BrewEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.event.world.TimeSkipEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -35,23 +34,33 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 
 import java.io.*;
-import java.time.Instant;
 import java.util.*;
 
 
-import static org.bukkit.Bukkit.getOfflinePlayerIfCached;
 import static org.bukkit.Bukkit.getPlayer;
 
 
 public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener {
 
+    private final HashMap<UUID, String> playerStatus = new HashMap<>();
+    private final HashMap<UUID, Long> combatLog = new HashMap<>();
+    private static final long COMBAT_TIME = 15000; // 15 sec
     private File jobsFile;
-    private FileConfiguration jobsConfig;
+    private final int REQUIRED_REP = 80;
+    private final HashMap<UUID, Long> protectedPlayers = new HashMap<>();
+    private final long PROTECTION_TIME = 90 * 1000;
+    private final HashMap<UUID, Long> elytraCooldown = new HashMap<>();
+    private final long COOLDOWN_TIME = 4000; // 4 secondes en millisecondes
+    private static FileConfiguration jobsConfig;
     private final Set<UUID> refundedPlayers = new HashSet<>(); // Liste des joueurs remboursés
-    private File bannedPlayersFile;
+    private Map<UUID, Long> mutedPlayers = new HashMap<>();
     private double dropChance;
     private FileConfiguration bannedPlayersConfig;
     private Map<UUID, Long> bannedPlayers;
@@ -70,12 +79,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     public FileConfiguration config;
     private LuckPerms luckPerms;
     private static Economy econ = null;
-
-
-
-
-
-
+    private Scoreboard scoreboard;
+    private static WizardStoneCraft instance;
 
 
     @Override
@@ -98,52 +103,91 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             getLogger().warning("§7[§e?§7]§c LuckPerms API non détectée !");
         }
 
-
-
-
-
         getLogger().info("§7[§e?§7]§a ReputationPlugin activé !");
         saveDefaultConfig();
         loadConfiguration();
+        updateVillagersTradingState();
         loadMessages();
         loadMessages();
         loadConfig();
         loadMessagese();
         config = getConfig();
         dropChance = config.getDouble("drop-chance", 50.0) / 100.0;
-        loadBannedPlayersData();
         PlaceHolderApi.checkPlaceholderAPI();
         WizardStoneCraft plugin = this;
-        // register des commande
+        scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        setupTeams();
 
         Bukkit.getPluginManager().registerEvents(this, this);
         getCommand("repadd").setExecutor(new ManageRepCommand());
         getCommand("reptop").setExecutor(new ReptopCommand());
         getCommand("rep").setExecutor(new ReputationCommand());
         getCommand("rephighlight").setExecutor(new RepHighlightCommand());
-        getCommand("help").setExecutor(new RepHelpCommand());
+        getCommand("rephelp").setExecutor(new RepHelpCommand());
         getCommand("repreload").setExecutor(new RepReloadCommand(this));
         getCommand("Broadcast").setExecutor(new Broadcast());
         getCommand("tabreload").setExecutor(new UpdateTablistCommand(this));
-        getCommand("menu").setExecutor(new RepGui());
+        getCommand("repmenu").setExecutor(new RepGui());
+        getCommand("repspawnnpc").setExecutor(this);
+        getCommand("jobsstatue").setExecutor(this);
+        getCommand("repunmute").setExecutor(new RepUnmuteCommand(mutedPlayers));
+        getCommand("passifset").setExecutor(new PassiveCommand());
+        getCommand("passifunset").setExecutor(new PassiveCommand());
+        this.getCommand("tpa").setExecutor(new TeleportCommands());
+        this.getCommand("tpyes").setExecutor(new TeleportCommands());
+        this.getCommand("tpno").setExecutor(new TeleportCommands());
+        getCommand("repmute").setExecutor(new RepUnmuteCommand(mutedPlayers));
 
+
+        instance = this;
         //tab updater
         new TablistUpdater(this).runTaskTimer(this, 10, 10);
     }
+    public static WizardStoneCraft getInstance() {
+        return instance;
+    }
 
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (cmd.getName().equalsIgnoreCase("jobsstatue") && sender instanceof Player) {
-            Player player = (Player) sender;
-            sender.sendMessage("\u00a76[Jobs] \u00a7fStatut de vos métiers :");
-            for (String job : new String[]{"mineur", "bucheron", "chasseur", "alchimiste", "pêcheur"}) {
-                int level = getJobXp(job + ".level", 0);
-                int xp = getJobXp(job + ".xp", 0);
-                sender.sendMessage("\u00a76" + job + " : \u00a7fNiveau " + level + " (" + xp + " XP)");
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("repspawnnpc")) {
+            if (sender instanceof Player) {
+                Player player = (Player) sender;
+                // Vérifier si le joueur a la permission d'exécuter cette commande
+                if (player.hasPermission("wizardstonecraft.repspawnnpc")) {
+                    // Invoquer le NPC "Pacificateur" à la position du joueur
+                    spawnPacificateur(player.getLocation());
+                    player.sendMessage(ChatColor.GREEN + "§7[§e?§7]§a Le Pacificateur a été invoqué à votre position !");
+                } else {
+                    player.sendMessage(ChatColor.RED + "§7[§e?§7]§c Vous n'avez pas la permission d'exécuter cette commande.");
+                }
+            } else {
+                sender.sendMessage(ChatColor.RED + "§7[§e?§7]§e Cette commande ne peut être exécutée que par un joueur.");
             }
             return true;
         }
-        return false;
+        return true;
     }
+
+    private void spawnPacificateur(Location location) {
+        World world = location.getWorld();
+        if (world != null) {
+            // Supprimer les anciens NPC "Pacificateur"
+            world.getEntitiesByClass(Villager.class).stream()
+                    .filter(v -> v.getCustomName() != null && v.getCustomName().equals("Pacificateur"))
+                    .forEach(Villager::remove);
+            // Invoquer un nouveau NPC "Pacificateur"
+            Villager pacificateur = world.spawn(location, Villager.class);
+            pacificateur.setCustomName("§7[§e?§7]§a Pacificateur");
+            pacificateur.setCustomNameVisible(true);
+            pacificateur.setAI(false);
+        }
+    }
+    public static boolean isPassive(Player player) {
+        return PassiveCommand.passivePlayers.getOrDefault(player.getUniqueId(), false);
+    }
+
+
+
 
 
     private void loadConfig() {
@@ -154,7 +198,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         jobsConfig = YamlConfiguration.loadConfiguration(jobsFile);
     }
 
-    private int getJobXp(String jobPath, int defaultValue) {
+    public static int getJobXp(String jobPath, int defaultValue) {
         return jobsConfig.getInt(jobPath, defaultValue);
     }
 
@@ -238,6 +282,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
 
 
+
     @Override
     public void onDisable() {
         getLogger().info("§7[§e?§7]§c ReputationPlugin désactivé !");
@@ -260,7 +305,6 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
     private String getMessage(String key) {
         return ChatColor.translateAlternateColorCodes('&', messages.getString(key));
-
     }
 
     private void sendChatMessage(Player player, String message) {
@@ -268,49 +312,54 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     }
 
 
+    public int getReputation(Player player) {
+        return loadPlayerReputation(player.getUniqueId());
+    }
+
+    public void removeReputation(Player player, int amount) {
+        UUID playerId = player.getUniqueId();
+        int currentReputation = getReputation(player);
+
+        // Mise à jour de la réputation
+        int newReputation = Math.max(-120, currentReputation - amount);
+        savePlayerReputation(playerId, newReputation);
+
+        // Vérification du bannissement
+
+    }
+
+
+
+
+
     void savePlayerReputation(UUID playerId, int rep) {
-        // Définition du fichier de réputation du joueur dans le dossier 'rep/'
         File repFolder = new File(getDataFolder(), "rep");
-
-        // Créer le dossier 'rep/' s'il n'existe pas
         if (!repFolder.exists()) {
-            repFolder.mkdirs(); // Crée le dossier 'rep/' si il n'existe pas encore
+            repFolder.mkdirs();
         }
-
         File playerFile = new File(repFolder, playerId + ".dat");
-
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(playerFile))) {
             oos.writeObject(rep);
-            getLogger().info("Réputation du joueur " + playerId + " sauvegardée avec succès dans " + playerId + ".dat.");
-
+            getLogger().info("Réputation du joueur " + playerId + " sauvegardée avec succès.");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    int loadPlayerReputation(UUID playerId) {
-        // Définition du dossier 'rep/' où le fichier de réputation est stocké
-        File repFolder = new File(getDataFolder(), "rep");
 
-        // Vérifier si le dossier existe
-        if (!repFolder.exists()) {
-            getLogger().warning("Le dossier 'rep/' est introuvable.");
-            return 0; // Réputation par défaut si le dossier est introuvable
-        }
-
-        // Fichier de réputation du joueur
-        File playerFile = new File(repFolder, playerId + ".dat");
+    public static int loadPlayerReputation(UUID playerId) {
+        File playerFile = new File(WizardStoneCraft.getInstance().getDataFolder(), "rep/" + playerId + ".dat");
 
         if (!playerFile.exists()) {
-            getLogger().warning("Fichier " + playerId + ".dat introuvable. Initialisation de la réputation par défaut.");
-            return 0; // Réputation par défaut si le fichier n'existe pas
+            return 0;
         }
 
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(playerFile))) {
             return (int) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
-            return 0; // Réputation par défaut en cas d'erreur
         }
+
+        return 0;
     }
 
 
@@ -318,6 +367,19 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
 
 
+    private void setupTeams() {
+        createTeam("PROTECTED", ChatColor.BLUE);
+        createTeam("COMBAT", ChatColor.RED);
+        createTeam("PASSIVE", ChatColor.GREEN);
+        createTeam("NEUTRAL", ChatColor.WHITE);
+    }
+    private void createTeam(String name, ChatColor color) {
+        Team team = scoreboard.getTeam(name);
+        if (team == null) {
+            team = scoreboard.registerNewTeam(name);
+        }
+        team.setColor(color);
+    }
 
 
 
@@ -372,23 +434,27 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             return ChatColor.translateAlternateColorCodes('&', config.getString("reputation-prefix.honorable"));
         if (reputation >= 50)
             return ChatColor.translateAlternateColorCodes('&', config.getString("reputation-prefix.good"));
+        if (reputation >= 10)
+            return ChatColor.translateAlternateColorCodes('&', config.getString("reputation-prefix.correct"));
         if (reputation >= 0)
             return ChatColor.translateAlternateColorCodes('&', config.getString("reputation-prefix.neutral"));
         if (reputation >= -50)
             return ChatColor.translateAlternateColorCodes('&', config.getString("reputation-prefix.dangerous"));
         if (reputation >= -100)
             return ChatColor.translateAlternateColorCodes('&', config.getString("reputation-prefix.bad"));
-        return ChatColor.translateAlternateColorCodes('&', config.getString("reputation-prefix.horrible"));
+        if (reputation >= -120) ChatColor.translateAlternateColorCodes('&', config.getString("reputation-prefix.horrible"));
+        return "";
     }
 
     private String getColoredReputationPrefix(int reputation) {
 
         if (reputation >= 100) return getConfig().getString("reputation-status.honorable");
         if (reputation >= 50) return getConfig().getString("reputation-status.good");
+        if (reputation >= 10) return getConfig().getString("reputation-status.correct");
         if (reputation >= 0) return getConfig().getString("reputation-status.neutral");
         if (reputation >= -10) return getConfig().getString("reputation-status.dangerous");
-        if (reputation >= -50) return getConfig().getString("reputation-status.bad");
-        if (reputation >= -100) return getConfig().getString("reputation-prefix.horrible");
+        if (reputation >= -100) return getConfig().getString("reputation-status.bad");
+        if (reputation >= -120) return getConfig().getString("reputation-prefix.horrible");
         return "";
     }
 
@@ -396,20 +462,22 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     public String getReputationStatus(int reputation) {
         if (reputation >= 100) return getConfig().getString("reputation-prefix.honorable");
         if (reputation >= 50) return getConfig().getString("reputation-prefix.good");
+        if (reputation >= 10) return getConfig().getString("reputation-prefix.correct");
         if (reputation >= 0) return getConfig().getString("reputation-prefix.neutral");
         if (reputation >= -10) return getConfig().getString("reputation-prefix.dangerous");
         if (reputation >= -50) return getConfig().getString("reputation-prefix.bad");
-        if (reputation >= -100) return getConfig().getString("reputation-prefix.horrible");
+        if (reputation >= -120) return getConfig().getString("reputation-prefix.horrible");
 
         return "";
     }
     public String getReputationPrefixe(int reputation) {
         if (reputation >= 100) return getConfig().getString("reputation-prefixe.honorable");
         if (reputation >= 50) return getConfig().getString("reputation-prefixe.good");
+        if (reputation >= 10) return getConfig().getString("reputation-prefixe.correct");
         if (reputation >= 0) return getConfig().getString("reputation-prefixe.neutral");
         if (reputation >= -10) return getConfig().getString("reputation-prefixe.dangerous");
         if (reputation >= -50) return getConfig().getString("reputation-prefixe.bad");
-        if (reputation >= -100) return getConfig().getString("reputation-prefixe.horrible");
+        if (reputation >= -120) return getConfig().getString("reputation-prefixe.horrible");
         return "";
     }
     private String getLuckPermsPrefix(Player player) {
@@ -466,14 +534,45 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                     .replace("%player%", target.getName())
                     .replace("%amount%", String.valueOf(amount)));
             savePlayerReputation(targetId, newReputation);
+
+            if (newReputation <= -120) {
+                // Auto-ban de 15 jours
+                long banDuration = System.currentTimeMillis() + (15L * 24 * 60 * 60 * 1000);
+                Bukkit.getScheduler().runTask((Plugin) this, () -> {
+                    target.kickPlayer(getMessage("auto_ban_message"));
+                    Bukkit.getBanList(BanList.Type.NAME).addBan(target.getName(), getMessage("ban_reason"), new Date(banDuration), "System");
+                });
+            } else if (newReputation <= -100) {
+                // Auto-mute de 5 jours
+                mutePlayer(targetId, 5);
+                sender.sendMessage(getMessage("auto_mute_message").replace("%player%", target.getName()));
+            }
             return true;
         }
 
+
+
+        public void mutePlayer(UUID playerId, int days) {
+            mutedPlayers.put(playerId, System.currentTimeMillis() + (days * 24L * 60 * 60 * 1000));
+        }
+
+
+
+        private void checkMutedPlayers() {
+            long currentTime = System.currentTimeMillis();
+            mutedPlayers.entrySet().removeIf(entry -> entry.getValue() < currentTime);
+        }
+
         @Override
-        public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-            return null; // Implémentation pour les suggestions automatiques
+        public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
+            return List.of();
         }
     }
+
+
+
+
+
 
     public class ReputationCommand  implements CommandExecutor {
         @Override
@@ -515,12 +614,13 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
                     .replace("%reputation%", String.valueOf(rep))
                     .replace("%liste%", "" +
                             "\n"+
-                            "§dΩ Honorable§F = 100§7\n" +
-                            "§aΩ Bonne§f = 50§7 \n" +
-                            "§7Ω Neutre§f = 0§7\n" +
-                            "§6Ω Dangereux§f = -10§7\n" +
-                            "§cΩ Mauvaise§f = -50§7\n" +
-                            "§4Ω Horrible§f = -100§7\n"+
+                            "- §dΩ Honorable§F = 100§7\n" +
+                            "- §2Ω Bonne§f = 50§7 \n" +
+                            "- §aΩ correct§f = 10§7\n" +
+                            "- §7Ω Neutre§f = 0§7\n" +
+                            "- §6Ω Dangereux§f = -10§7\n" +
+                            "- §cΩ Mauvaise§f = -50§7\n" +
+                            "- §4Ω Horrible§f = -100§7\n"+
                             "\n")
                     .replace("%status%", status));
 
@@ -631,50 +731,6 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         }
     }
 
-
-    public int getReputation(Player player) {
-        return reputation.getOrDefault(player.getUniqueId(), 0);
-    }
-    public void removeReputation(Player player, int amount) {
-        UUID playerId = player.getUniqueId();
-        int currentReputation = getReputation(player);
-
-        // Update the reputation and apply the penalty
-        int newReputation = Math.max(-120, currentReputation - amount);
-        reputation.put(playerId, newReputation);
-
-        // Check if the player needs to be banned
-        if (newReputation == -120) {
-            // Ban the player for 15 or 16 days
-            int banDays = 15 + (Math.random() < 0.5 ? 1 : 0); // Randomly choose 15 or 16 days
-            long banDuration = Instant.now().plusSeconds(banDays * 24 * 60 * 60).getEpochSecond();
-
-            // Store the ban information (you should save this in a persistent storage, such as a file or database)
-            saveBanData(playerId, banDuration);
-
-            // Kick the player and inform them about the ban duration
-            player.kickPlayer(messages.getString("ban_message").replace("{days}", String.valueOf(banDays)));
-        }
-    }
-
-    private void saveBanData(UUID playerId, long banExpiryTime) {
-        // Here you would save the ban data to a file or database
-        // Example: save to a simple HashMap or a persistent file
-        // For this example, we'll store it in an in-memory HashMap
-        bannedPlayers.put(playerId, banExpiryTime);
-
-        // You could save it to a file like so (example, using a YML file for persistence):
-         config.set("bannedPlayers." + playerId.toString(), banExpiryTime);
-         saveConfig();
-    }
-
-
-
-
-
-
-
-
 //event
 @EventHandler
 public void onPlayerDeath(PlayerDeathEvent event) {
@@ -700,8 +756,8 @@ public void onPlayerDeath(PlayerDeathEvent event) {
             // Charger la réputation actuelle
             int pointsKill = reputation.getOrDefault(killerId, loadPlayerReputation(killerId));
 
-            // Appliquer une perte de réputation
-            int newRep = Math.max(pointsKill - 2, MIN_REP);
+            // Appliquer une perte de réputation (minimum 0)
+            int newRep = Math.max(pointsKill - 2, 0);
 
             // Mettre à jour la réputation
             reputation.put(killerId, newRep);
@@ -710,13 +766,13 @@ public void onPlayerDeath(PlayerDeathEvent event) {
             // Envoyer un message au joueur
             String message = getMessage("reputation_lost");
             if (message != null) {
-                getMessage("reputation_lost");
+                killer.sendMessage(ChatColor.RED + message.replace("%points%", String.valueOf(newRep)));
             } else {
-                getMessage("reputation_lost");
+                killer.sendMessage(ChatColor.RED + "§7[§e?§7]§c Vous avez perdu de la réputation ! Nouvelle réputation : " + newRep);
             }
         }
-
     }
+
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -729,63 +785,22 @@ public void onPlayerDeath(PlayerDeathEvent event) {
         player.sendMessage(getMessage("reputation_gained"));
         savePlayerReputation(playerId, Math.min(newRep, MAX_REP));
         updateTabList(player);
-
-        // Vérifie si le système de ban automatique est activé dans la configuration
-        if (config.getBoolean("autoBanOnLowReputation", true) && newRep <= config.getInt("reputationThreshold", -120)) {
-            long banDurationSeconds = config.getInt("banDurationDays", 30) * 24 * 60 * 60; // Durée du ban en secondes
-            long banExpiryTime = Instant.now().getEpochSecond() + banDurationSeconds;
-
-            bannedPlayers.put(playerId, banExpiryTime); // Ajoute le joueur à la liste des bannis
-            saveBannedPlayersData(); // Sauvegarde des données de ban
-            player.kickPlayer(getMessage("ban_message") + newRep);
-            return;
+        if (isPassive(player)) {
+            player.setDisplayName(ChatColor.GREEN + player.getName());
+        } else {
+            player.setDisplayName(ChatColor.AQUA + player.getName()); // Cyan pour joueurs protégés
         }
+        protectedPlayers.put(player.getUniqueId(), System.currentTimeMillis());
+        player.sendMessage("§7[§e?§7] §aVous êtes protégé pendant 90 secondes après votre connexion !");
 
-        // Vérifie si le joueur est banni
-        if (bannedPlayers.containsKey(playerId)) {
-            long banExpiryTime = bannedPlayers.get(playerId);
-            long currentTime = Instant.now().getEpochSecond();
-
-            // Si le temps actuel est inférieur au temps d'expiration du ban, le joueur est toujours banni
-            if (currentTime < banExpiryTime) {
-                long remainingTime = banExpiryTime - currentTime;
-                long remainingDays = remainingTime / (24 * 60 * 60); // Convertir en jours
-
-                // Informe le joueur du temps restant sur son ban
-                player.kickPlayer(getMessage("ban_message") + remainingDays);
-                return;
-            }
-        }
     }
 
-    public void loadBannedPlayersData() {
-        bannedPlayersFile = new File(getDataFolder(), "bannedPlayers.yml");
-        if (!bannedPlayersFile.exists()) {
-            saveResource("bannedPlayers.yml", true);
-        }
 
-        bannedPlayersConfig = YamlConfiguration.loadConfiguration(bannedPlayersFile);
-        bannedPlayers = new HashMap<>();
 
-        // Charge les données de ban dans la map
-        for (String key : bannedPlayersConfig.getKeys(false)) {
-            UUID playerId = UUID.fromString(key);
-            long banExpiryTime = bannedPlayersConfig.getLong(key);
-            bannedPlayers.put(playerId, banExpiryTime);
-        }
-    }
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {}
 
-    public void saveBannedPlayersData() {
-        for (Map.Entry<UUID, Long> entry : bannedPlayers.entrySet()) {
-            bannedPlayersConfig.set(entry.getKey().toString(), entry.getValue());
-        }
 
-        try {
-            bannedPlayersConfig.save(bannedPlayersFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public void loadMessagese() {
         File file = new File(getDataFolder(), "messages.yml");
@@ -897,28 +912,25 @@ public void onPlayerDeath(PlayerDeathEvent event) {
             saveInventory(player, adventureFile); // Sauvegarde l'inventaire de survie
             loadInventory(player, creativeFile); // Charge l'inventaire créatif
             Bukkit.getLogger().info("[Inventaire] " + player.getName() + " passe en Créatif (inventaire chargé).");
-
+            player.sendMessage("§7[§e?§7] Vous avez Changé d'inventaire");
         } else if (newGameMode == GameMode.SURVIVAL) {
             saveInventory(player, creativeFile);  // Sauvegarde l'inventaire créatif
-            loadInventory(player, survivalFile);
-            saveInventory(player, adventureFile);
-            saveInventory(player, spectatorFile);// Charge l'inventaire de survie
+            loadInventory(player, survivalFile);// Charge l'inventaire de survie
             Bukkit.getLogger().info("[Inventaire] " + player.getName() + " passe en Survie (inventaire restauré).");
-        }if (newGameMode == GameMode.ADVENTURE){
-            saveInventory(player, survivalFile);
+            player.sendMessage("§7[§e?§7] Vous avez Changé d'inventaire");
+        }
+        if (newGameMode == GameMode.ADVENTURE){
             saveInventory(player, creativeFile); // Sauvegarde l'inventaire de survie
-            loadInventory(player, adventureFile);
-            saveInventory(player, spectatorFile);// Charge l'inventaire créatif
+            loadInventory(player, adventureFile); // Charge l'inventaire créatif
             Bukkit.getLogger().info("[Inventaire] " + player.getName() + " passe en Adventure (inventaire chargé).");
-
+            player.sendMessage("§7[§e?§7] Vous avez Changé d'inventaire");
         }
         if (newGameMode == GameMode.SPECTATOR){
-            saveInventory(player, survivalFile);
             saveInventory(player, creativeFile); // Sauvegarde l'inventaire de survie
             loadInventory(player, spectatorFile);
-            saveInventory(player, adventureFile);// Charge l'inventaire créatif
+            // Charge l'inventaire créatif
             Bukkit.getLogger().info("[Inventaire] " + player.getName() + " passe en Specrator (inventaire chargé).");
-
+            player.sendMessage("§7[§e?§7] Vous avez Changé d'inventaire");
         }
     }
 
@@ -983,6 +995,37 @@ public void onPlayerDeath(PlayerDeathEvent event) {
     }
 
     @EventHandler
+    public void onElytraBoost(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+
+        if (event.getItem() != null && event.getItem().getType() == Material.FIREWORK_ROCKET) {
+            if (player.isGliding()) { // Vérifie si le joueur est en vol avec l'elytra
+                UUID playerId = player.getUniqueId();
+                long currentTime = System.currentTimeMillis();
+
+                if (elytraCooldown.containsKey(playerId)) {
+                    long lastUse = elytraCooldown.get(playerId);
+                    if (currentTime - lastUse < COOLDOWN_TIME) {
+                        event.setCancelled(true);
+                        player.sendMessage("§7[§e?§7] §cAttendez avant d'utiliser une autre fusée !");
+                        return;
+                    }
+                }
+                elytraCooldown.put(playerId, currentTime);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onElytraFly(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+
+        if (player.isGliding() && player.getGameMode() != GameMode.CREATIVE) {
+            player.setVelocity(player.getVelocity().multiply(0.7)); // Réduction de vitesse de 30%
+        }
+    }
+
+    @EventHandler
     public void onFish(PlayerFishEvent event) {
         Player player = event.getPlayer();
         if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH) {
@@ -991,7 +1034,223 @@ public void onPlayerDeath(PlayerDeathEvent event) {
             player.sendMessage("\u00a76[Jobs] \u00a7f+" + xp + " XP pour avoir pêché un poisson !");
         }
     }
+    @EventHandler
+    public void onMaceHit(EntityDamageByEntityEvent event) {
+        // Vérifie si l'attaquant est un joueur
+        if (!(event.getDamager() instanceof Player)) return;
+        Player attacker = (Player) event.getDamager();
+
+        // Vérifie si la cible est un joueur
+        if (!(event.getEntity() instanceof Player)) return;
+        Player target = (Player) event.getEntity();
+
+        // Vérifie si l'attaquant utilise une Masse
+        ItemStack weapon = attacker.getInventory().getItemInMainHand();
+        if (weapon.getType() != Material.MACE) return; // Remplace `WOODEN_AXE` par le bon item si nécessaire
+
+        // Vérifie si la cible porte au moins une pièce d'armure en Diamant ou Netherite
+        if (!hasDiamondOrNetheriteArmor(target)) return;
+
+        // Réduction des dégâts de 60%
+        double originalDamage = event.getDamage();
+        double reducedDamage = originalDamage * 0.4; // 40% des dégâts d'origine
+        event.setDamage(reducedDamage);
+
+        // Empêcher le one-shot
+        double targetHealth = target.getHealth();
+        double maxHealth = target.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+        if (reducedDamage >= targetHealth) {
+            event.setDamage(targetHealth - 1); // Laisse au moins 1 HP pour éviter le one-shot
+        }
+    }
+
+    private boolean hasDiamondOrNetheriteArmor(Player player) {
+        for (ItemStack armor : player.getInventory().getArmorContents()) {
+            if (armor != null) {
+                Material type = armor.getType();
+                if (type == Material.DIAMOND_HELMET || type == Material.DIAMOND_CHESTPLATE ||
+                        type == Material.DIAMOND_LEGGINGS || type == Material.DIAMOND_BOOTS ||
+                        type == Material.NETHERITE_HELMET || type == Material.NETHERITE_CHESTPLATE ||
+                        type == Material.NETHERITE_LEGGINGS || type == Material.NETHERITE_BOOTS) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+
+    @EventHandler
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+        Player player = event.getPlayer();
+        protectedPlayers.put(player.getUniqueId(), System.currentTimeMillis());
+        player.sendMessage("§7[§e?§7] §aVous êtes protégé pendant 90 secondes après votre téléportation !");
+    }
+
+    @EventHandler
+    public void onPlayerDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player)) return;
+
+        Player target = (Player) event.getEntity();
+        UUID targetId = target.getUniqueId();
+
+        if (protectedPlayers.containsKey(targetId)) {
+            long protectionStart = protectedPlayers.get(targetId);
+            if (System.currentTimeMillis() - protectionStart < PROTECTION_TIME) {
+                event.setCancelled(true);
+                event.getDamager().sendMessage("§7[§e?§7] §cCe joueur est actuellement protégé !");
+            }
+        }
+    }
+
+
+
+
+
+    @EventHandler
+    public void onTimeSkip(TimeSkipEvent event) {
+        updateVillagersTradingState();
+    }
+
+
+    private void updateVillagersTradingState() {
+        long time = Bukkit.getWorld("world").getTime();
+        boolean tradingAllowed = time >= 2000 && time <= 12000;
+        for (Villager villager : Bukkit.getWorld("world").getEntitiesByClass(Villager.class)) {
+            villager.setAI(tradingAllowed);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerChats(AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
+        long currentTime = System.currentTimeMillis();
+
+        // Vérifie si le joueur est mute
+        if (mutedPlayers.containsKey(playerId)) {
+            long muteExpiration = mutedPlayers.get(playerId);
+            if (muteExpiration > currentTime) {
+                player.sendMessage(getMessage("chat_muted"));
+                event.setCancelled(true);
+            } else {
+                unmutePlayer(playerId); // Supprime le mute si expiré
+            }
+        }
+    }
+    public void unmutePlayer(UUID playerId) {
+        mutedPlayers.remove(playerId);
+    }
+
+
+    @EventHandler
+    public void onPlayerConsumeMilk(PlayerItemConsumeEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+
+        if (item.getType() == Material.MILK_BUCKET) {
+            // Autoriser la consommation de lait normalement
+            player.sendMessage("§7[§e?§7] §aVous avez bu du lait !");
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDamages(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
+            Player attacker = (Player) event.getDamager();
+            Player victim = (Player) event.getEntity();
+
+            if (isPassive(victim)) {
+                event.setCancelled(true);
+                attacker.sendMessage(ChatColor.RED + " §7[§e?§7]§a Ce joueur est en Mode Passif §c! Vous ne pouvez pas l'attaquer.");
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerInteractAtEntity(PlayerInteractAtEntityEvent event) {
+        if (event.getRightClicked() instanceof Villager) {
+            Villager villager = (Villager) event.getRightClicked();
+            if ("§7[§e?§7]§a Pacificateur".equals(villager.getCustomName())) {
+                Player player = event.getPlayer();
+                int reputation = getReputation(player); // Implémentez cette méthode pour obtenir la réputation du joueur
+                if (reputation >= REQUIRED_REP) {
+                    PassiveCommand.setPassive(player, true);
+                    player.sendMessage(ChatColor.RED +"§7[§e?§7] §aVous avez activer le Mode Passif." );
+                } else {
+                    player.sendMessage(ChatColor.RED + "§7[§e?§7] §cVous n'avez pas assez de réputation pour activer le Mode Passif.");
+                }
+            }
+        }
+    }
+    @EventHandler
+    public void onPlayerJoins(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        setPseudoColor(player, "PROTECTED");
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (player.isOnline() && playerStatus.get(player.getUniqueId()).equals("PROTECTED")) {
+                    setPseudoColor(player, "NEUTRAL");
+                }
+            }
+        }.runTaskLater(this, 200L); // 10 sec
+    }
+
+    @EventHandler
+    public void onPlayerTeleports(PlayerTeleportEvent event) {
+        setPseudoColor(event.getPlayer(), "PROTECTED");
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (event.getPlayer().isOnline() && playerStatus.get(event.getPlayer().getUniqueId()).equals("PROTECTED")) {
+                    setPseudoColor(event.getPlayer(), "NEUTRAL");
+                }
+            }
+        }.runTaskLater(this, 200L); // 10 sec
+    }
+
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
+            Player attacker = (Player) event.getDamager();
+            Player victim = (Player) event.getEntity();
+
+            if (playerStatus.getOrDefault(attacker.getUniqueId(), "NEUTRAL").equals("PASSIVE")) {
+                event.setCancelled(true);
+                attacker.sendMessage(ChatColor.RED + "§7[§e?§7]§c Vous ne pouvez pas attaquer en mode passif !");
+                return;
+            }
+
+            setPseudoColor(attacker, "COMBAT");
+            setPseudoColor(victim, "COMBAT");
+            combatLog.put(attacker.getUniqueId(), System.currentTimeMillis());
+            combatLog.put(victim.getUniqueId(), System.currentTimeMillis());
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuits(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        if (combatLog.containsKey(player.getUniqueId()) && System.currentTimeMillis() - combatLog.get(player.getUniqueId()) <= COMBAT_TIME) {
+            Bukkit.getServer().broadcastMessage(ChatColor.RED + player.getName() + "§7[§e?§7]§c s'est déconnecté en combat et a été sanctionné !");
+            player.setHealth(0.0);
+        }
+    }
+
+    public void setPseudoColor(Player player, String status) {
+        Team team = scoreboard.getTeam(status);
+        if (team != null) {
+            team.addEntry(player.getName());
+        }
+        playerStatus.put(player.getUniqueId(), status);
+    }
 }
+
+
+
+
 
 
 
