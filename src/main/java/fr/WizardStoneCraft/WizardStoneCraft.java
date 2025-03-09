@@ -25,8 +25,10 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.BrewEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.world.TimeSkipEvent;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -889,7 +891,35 @@ public void onPlayerDeath(PlayerDeathEvent event) {
             event.setCancelled(true);
         }
     }
+    @EventHandler
+    public void onVillagerTrade(InventoryOpenEvent event) {
+        InventoryHolder holder = event.getInventory().getHolder();
 
+        // Vérifie si l'entité est un villageois
+        if (holder instanceof Villager) {
+            Player player = (Player) event.getPlayer();
+            long time = player.getWorld().getTime(); // Temps du monde (0 = 06:00, 6000 = 12:00)
+
+            // Plage horaire autorisée (8h à 16h in-game, soit 2000 à 12000 ticks)
+            if (time < 2000 || time > 12000) {
+                event.setCancelled(true);
+                player.sendMessage(ChatColor.GRAY + "[" + ChatColor.YELLOW + "?" + ChatColor.GRAY + "] "
+                        + ChatColor.RED + "Ce n'est pas l'heure d'échanger avec les villageois ! "
+                        + ChatColor.GRAY + "Les heures d'échange sont de 8h à 16h.");
+            }
+        }
+    }
+    @EventHandler
+    public void onClockUse(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = player.getInventory().getItemInMainHand();
+
+        if (item.getType() == Material.CLOCK) {
+            long time = player.getWorld().getTime();
+            int hours = (int) ((time / 1000 + 6) % 24); // Convertir ticks en heures
+            player.sendMessage(ChatColor.GRAY + "Heure actuelle en jeu : " + ChatColor.YELLOW + hours + "h");
+        }
+    }
 
     @EventHandler
     public void onGameModeChange(PlayerGameModeChangeEvent event) {
