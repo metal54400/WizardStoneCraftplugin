@@ -11,7 +11,8 @@ tablist:
 
 reputation-status:
   honorable: "§dHonorable"
-  good: "§aBonne"
+  good: "§2Bonne"
+  correct: "§acorrect"
   neutral: "§7Neutre"
   dangerous: "§6Dangereux"
   bad: "§cMauvaise"
@@ -19,7 +20,8 @@ reputation-status:
 
 reputation-prefixe:
   honorable: "§dΩ Honorable§7"
-  good: "§aΩ Bonne§7"
+  good: "§2Ω Bonne§7"
+  correct: "§aΩ correct§7"
   neutral: "§7Ω Neutre§7"
   dangerous: "§6Ω Dangereux§7"
   bad: "§cΩ Mauvaise§7"
@@ -27,7 +29,8 @@ reputation-prefixe:
 
 reputation-prefix:
     honorable: "§dΩ"
-    good: "§aΩ"
+    good: "§2Ω"
+    correct: "§aΩ"
     neutral: "§7Ω"
     dangerous: "§6Ω"
     bad: "§cΩ"
