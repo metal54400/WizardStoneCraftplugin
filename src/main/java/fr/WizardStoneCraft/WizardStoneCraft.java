@@ -5,6 +5,8 @@ package fr.WizardStoneCraft;
 import fr.WizardStoneCraft.Commands.*;
 import fr.WizardStoneCraft.PlaceHolderApi.PlaceHolderApi;
 
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.cacheddata.CachedMetaData;
@@ -16,25 +18,30 @@ import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.ThrownPotion;
 import org.bukkit.entity.Villager;
+import org.bukkit.entity.WanderingTrader;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.block.BlockDispenseEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.BrewEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.event.raid.RaidEvent;
+import org.bukkit.event.raid.RaidFinishEvent;
+import org.bukkit.event.raid.RaidSpawnWaveEvent;
 import org.bukkit.event.world.TimeSkipEvent;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -43,6 +50,8 @@ import org.jetbrains.annotations.Nullable;
 
 
 import java.io.*;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.*;
 
 
@@ -51,6 +60,9 @@ import static org.bukkit.Bukkit.getPlayer;
 
 public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener {
 
+    private final Map<UUID, Long> raidCooldown = new HashMap<>();
+    private final long ONE_HOUR = 3600000L;
+    private final Map<UUID, Long> bookTradeCooldown = new HashMap<>();
     private final HashMap<UUID, String> playerStatus = new HashMap<>();
     private final HashMap<UUID, Long> combatLog = new HashMap<>();
     private static final long COMBAT_TIME = 15000; // 15 sec
@@ -80,9 +92,17 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     private String chatPrefix;
     public FileConfiguration config;
     private LuckPerms luckPerms;
+    private GriefPrevention griefPrevention;
     private static Economy econ = null;
     private Scoreboard scoreboard;
     private static WizardStoneCraft instance;
+    private final Random random = new Random();
+    private final List<Material> rareItems = Arrays.asList(
+            Material.DIAMOND, Material.NETHERITE_INGOT, Material.ENCHANTED_GOLDEN_APPLE,
+            Material.BEACON, Material.DRAGON_EGG, Material.ELYTRA
+    );
+    public List<MerchantRecipe> dailyDeals = new ArrayList<>();
+    public LocalDate lastUpdate = LocalDate.now();
 
 
     @Override
@@ -105,6 +125,15 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             getLogger().warning("§7[§e?§7]§c LuckPerms API non détectée !");
         }
 
+        RegisteredServiceProvider<GriefPrevention> providers = Bukkit.getServicesManager().getRegistration(GriefPrevention.class);
+        if (providers != null) {
+            griefPrevention = providers.getProvider();
+            getLogger().info("§7[§e?§7]§a GriefPrevention API détectée et connectée !");
+        } else {
+            getLogger().warning("§7[§e?§7]§c GriefPrevention API non détectée !");
+        }
+
+
         getLogger().info("§7[§e?§7]§a ReputationPlugin activé !");
         saveDefaultConfig();
         loadConfiguration();
@@ -119,6 +148,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         WizardStoneCraft plugin = this;
         scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
         setupTeams();
+        updateDailyDeals();
 
         Bukkit.getPluginManager().registerEvents(this, this);
         getCommand("repadd").setExecutor(new ManageRepCommand());
@@ -131,6 +161,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getCommand("tabreload").setExecutor(new UpdateTablistCommand(this));
         getCommand("repmenu").setExecutor(new RepGui());
         getCommand("repspawnnpc").setExecutor(this);
+        getCommand("affairenpc").setExecutor(this);
         getCommand("jobsstatue").setExecutor(this);
         getCommand("repunmute").setExecutor(new RepUnmuteCommand(mutedPlayers));
         getCommand("passifset").setExecutor(new PassiveCommand());
@@ -139,6 +170,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         this.getCommand("tpyes").setExecutor(new TeleportCommands());
         this.getCommand("tpno").setExecutor(new TeleportCommands());
         getCommand("repmute").setExecutor(new RepUnmuteCommand(mutedPlayers));
+        getCommand("affairenpc").setExecutor(new npcaffaire());
 
 
         instance = this;
@@ -187,6 +219,21 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     public static boolean isPassive(Player player) {
         return PassiveCommand.passivePlayers.getOrDefault(player.getUniqueId(), false);
     }
+
+    private void updateDailyDeals() {
+        if (!LocalDate.now().isEqual(lastUpdate)) {
+            lastUpdate = LocalDate.now();
+            dailyDeals.clear();
+            for (int i = 0; i < 3; i++) {
+                ItemStack sellItem = new ItemStack(rareItems.get(random.nextInt(rareItems.size())), 1);
+                ItemStack cost = new ItemStack(Material.EMERALD, random.nextInt(32) + 16);
+                MerchantRecipe trade = new MerchantRecipe(sellItem, 10);
+                trade.addIngredient(cost);
+                dailyDeals.add(trade);
+            }
+        }
+    }
+
 
 
 
@@ -735,6 +782,43 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
 //event
 @EventHandler
+public void onPlayerInteract(PlayerInteractEvent event) {
+    if (event.getHand() == EquipmentSlot.HAND) {
+        ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
+        if (item.getType() == Material.STICK) {
+            Claim claim = griefPrevention.dataStore.getClaimAt(event.getPlayer().getLocation(), true, null);
+            if (claim == null) {
+                event.getPlayer().sendMessage(ChatColor.RED + "Vous n'êtes pas dans un claim.");
+                return;
+            }
+            drawClaimBorder(event.getPlayer(), claim);
+            event.getPlayer().sendMessage(ChatColor.GREEN + "Les limites du claim sont affichées !");
+        }
+    }
+}
+
+    private void drawClaimBorder(org.bukkit.entity.Player player, Claim claim) {
+        int minX = claim.getLesserBoundaryCorner().getBlockX();
+        int minZ = claim.getLesserBoundaryCorner().getBlockZ();
+        int maxX = claim.getGreaterBoundaryCorner().getBlockX();
+        int maxZ = claim.getGreaterBoundaryCorner().getBlockZ();
+        int y = player.getLocation().getBlockY(); // Hauteur de la ligne
+
+        for (int x = minX; x <= maxX; x++) {
+            Location loc1 = new Location(player.getWorld(), x, y, minZ);
+            Location loc2 = new Location(player.getWorld(), x, y, maxZ);
+            player.sendBlockChange(loc1, Material.YELLOW_WOOL.createBlockData());
+            player.sendBlockChange(loc2, Material.YELLOW_WOOL.createBlockData());
+        }
+        for (int z = minZ; z <= maxZ; z++) {
+            Location loc3 = new Location(player.getWorld(), minX, y, z);
+            Location loc4 = new Location(player.getWorld(), maxX, y, z);
+            player.sendBlockChange(loc3, Material.YELLOW_WOOL.createBlockData());
+            player.sendBlockChange(loc4, Material.YELLOW_WOOL.createBlockData());
+        }
+    }
+
+@EventHandler
 public void onPlayerDeath(PlayerDeathEvent event) {
     Player player = event.getEntity();
     if (new Random().nextDouble() < dropChance) {
@@ -918,6 +1002,42 @@ public void onPlayerDeath(PlayerDeathEvent event) {
             long time = player.getWorld().getTime();
             int hours = (int) ((time / 1000 + 6) % 24); // Convertir ticks en heures
             player.sendMessage(ChatColor.GRAY + "Heure actuelle en jeu : " + ChatColor.YELLOW + hours + "h");
+        }
+    }
+
+    @EventHandler
+    public void onItemUse(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        Material item = player.getInventory().getItemInMainHand().getType();
+
+        // Vérifier si le joueur fait un clic droit avec une montre ou une boussole
+        if (event.getAction().toString().contains("RIGHT_CLICK") &&
+                (item == Material.CLOCK || item == Material.COMPASS)) {
+
+            // Récupérer l'heure en jeu
+            long time = player.getWorld().getTime();
+            int hours = (int) ((time / 1000 + 6) % 24);
+            int minutes = (int) ((time % 1000) * 60 / 1000);
+
+            // Récupérer l'heure réelle (IRL)
+            SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+            dateFormat.setTimeZone(TimeZone.getDefault()); // Fuseau horaire du serveur
+            String realTime = dateFormat.format(new Date());
+
+            // Message de base avec l'heure
+            String message = ChatColor.GRAY + "In-game: " + ChatColor.AQUA + String.format("%02d:%02d", hours, minutes) +
+                    ChatColor.GRAY + " | IRL: " + ChatColor.LIGHT_PURPLE + realTime;
+
+            // Si c'est une boussole, ajouter les coordonnées
+            if (item == Material.COMPASS) {
+                Location loc = player.getLocation();
+                message += ChatColor.GRAY + " | X: " + ChatColor.YELLOW + loc.getBlockX() +
+                        ChatColor.GRAY + " Y: " + ChatColor.YELLOW + loc.getBlockY() +
+                        ChatColor.GRAY + " Z: " + ChatColor.YELLOW + loc.getBlockZ();
+            }
+
+            // Envoyer le message au joueur
+            player.sendMessage(message);
         }
     }
 
@@ -1259,6 +1379,39 @@ public void onPlayerDeath(PlayerDeathEvent event) {
             combatLog.put(victim.getUniqueId(), System.currentTimeMillis());
         }
     }
+    @EventHandler
+    public void onTrade(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getInventory().getHolder() instanceof Villager villager)) return;
+
+        MerchantRecipe trade = villager.getRecipe(event.getSlot());
+        Material result = trade.getResult().getType();
+        UUID playerUUID = player.getUniqueId();
+
+        // Limitation des livres enchantés (1 par heure)
+        if (result == Material.ENCHANTED_BOOK) {
+            long lastTrade = bookTradeCooldown.getOrDefault(playerUUID, 0L);
+            if (System.currentTimeMillis() - lastTrade < 3600000) {
+                event.setCancelled(true);
+                player.sendMessage("\u00a7cVous devez attendre avant d'acheter un autre livre enchanté !");
+                return;
+            }
+            bookTradeCooldown.put(playerUUID, System.currentTimeMillis());
+        }
+    }
+
+    @EventHandler
+    public void onVillagerTradeChange(VillagerAcquireTradeEvent event) {
+        MerchantRecipe trade = event.getRecipe();
+        Material result = trade.getResult().getType();
+
+        // Appliquer les limitations sur certains échanges
+        if (result == Material.DIAMOND_CHESTPLATE || result == Material.DIAMOND_PICKAXE) {
+            trade.setMaxUses(1); // 1 trade par refill
+        } else if (result == Material.COAL || result == Material.STICK) {
+            trade.setMaxUses(5); // 5 trades par refill
+        }
+    }
 
     @EventHandler
     public void onPlayerQuits(PlayerQuitEvent event) {
@@ -1269,6 +1422,12 @@ public void onPlayerDeath(PlayerDeathEvent event) {
         }
     }
 
+
+
+
+
+
+
     public void setPseudoColor(Player player, String status) {
         Team team = scoreboard.getTeam(status);
         if (team != null) {
@@ -1276,7 +1435,111 @@ public void onPlayerDeath(PlayerDeathEvent event) {
         }
         playerStatus.put(player.getUniqueId(), status);
     }
+    @EventHandler
+    public void onRaidWaveSpawn(RaidSpawnWaveEvent event) {
+        // On ne vérifie le cooldown qu'au début du raid (première vague)
+        if (event.getPatrolLeader().getWave() == 1) {
+            Raid raid = event.getRaid();
+            long now = System.currentTimeMillis();
+            Iterator<UUID> it = raid.getHeroes().iterator();
+            while (it.hasNext()) {
+                UUID player = it.next();
+                Player player1 = getPlayer(player);
+                if (raidCooldown.containsKey(player)) {
+                    long lastRaid = raidCooldown.get(player);
+                    if (now - lastRaid < ONE_HOUR) {
+                        long minutesRestantes = (ONE_HOUR - (now - lastRaid)) / 60000;
+                        player1.sendMessage("§7[§e?§7] Vous devez attendre encore " + minutesRestantes + " minutes avant de participer à un nouveau raid.");
+                        // On retire le joueur de la liste des participants du raid
+                        it.remove();
+                        continue;
+                    }
+                }
+                // Mise à jour du cooldown pour le joueur
+                raidCooldown.put(player, now);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPotionSplashs(PotionSplashEvent event) {
+        ThrownPotion thrownPotion = event.getPotion();
+        ItemStack potionItem = thrownPotion.getItem();
+        if (potionItem.hasItemMeta() && potionItem.getItemMeta() instanceof PotionMeta) {
+            PotionMeta meta = (PotionMeta) potionItem.getItemMeta();
+            // Vérifier les effets personnalisés
+            for (PotionEffect effect : meta.getCustomEffects()) {
+                String effectName = effect.getType().getName();
+                if (effectName.equalsIgnoreCase("oozing") || effectName.equalsIgnoreCase("infested")) {
+                    // Annule l’événement pour empêcher l’application des effets
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPotionSplash(PotionSplashEvent event) {
+        ItemStack potionItem = event.getPotion().getItem();
+
+        if (potionItem.hasItemMeta() && potionItem.getItemMeta() instanceof PotionMeta) {
+            PotionMeta meta = (PotionMeta) potionItem.getItemMeta();
+            for (PotionEffect effect : meta.getCustomEffects()) {
+                String effectName = effect.getType().getName().toLowerCase();
+
+                // Interdire le lancer de potions "oozing" ou "infested" en s'accroupissant
+                if ((effectName.contains("oozing") || effectName.contains("infested")) &&
+                        event.getPotion().getShooter() instanceof Player) {
+
+                    Player shooter = (Player) event.getPotion().getShooter();
+                    if (shooter.isSneaking()) {
+                        shooter.sendMessage("Vous ne pouvez pas lancer des potions oozing ou infested en vous accroupissant.");
+                        event.setCancelled(true);
+                        return;
+                    }
+                }
+
+                // Interdire les potions persistantes de faiblesse dans un claim
+                if (effectName.contains("weakness") && potionItem.getType() == Material.LINGERING_POTION &&
+                        event.getPotion().getShooter() instanceof Player) {
+
+                    Player shooter = (Player) event.getPotion().getShooter();
+                    if (isInClaim(shooter.getLocation())) {
+                        shooter.sendMessage("Vous ne pouvez pas utiliser de potions persistantes de faiblesse dans un claim.");
+                        event.setCancelled(true);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    // Interdire le lancement via distributeur pour les potions "oozing" ou "infested"
+    @EventHandler
+    public void onBlockDispense(BlockDispenseEvent event) {
+        ItemStack item = event.getItem();
+        if ((item.getType() == Material.SPLASH_POTION || item.getType() == Material.LINGERING_POTION) &&
+                item.hasItemMeta() && item.getItemMeta() instanceof PotionMeta) {
+
+            PotionMeta meta = (PotionMeta) item.getItemMeta();
+            for (PotionEffect effect : meta.getCustomEffects()) {
+                String effectName = effect.getType().getName().toLowerCase();
+                if (effectName.contains("oozing") || effectName.contains("infested")) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+    }
+
+    // Méthode de vérification de claim via GriefPrevention
+    private boolean isInClaim(Location loc) {
+        Claim claim = GriefPrevention.instance.dataStore.getClaimAt(loc, false, null);
+        return claim != null;
+    }
 }
+
 
 
 

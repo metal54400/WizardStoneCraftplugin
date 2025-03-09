@@ -1,5 +1,5 @@
 name: WizardStoneCraft
-version: '0.0.0.5'
+version: '0.0.0.7'
 main: fr.WizardStoneCraft.WizardStoneCraft
 api-version: 1.21
 
@@ -17,6 +17,11 @@ softdepend:
   - papermc
 
 commands:
+
+  affairenpc:
+    description: Dé-mute un joueur.
+    usage: /affairenpc
+    permission: wizardstonecraft.affairenpc
   repunmute:
     description: Dé-mute un joueur.
     usage: /repunmute <joueur>
@@ -152,3 +157,7 @@ permissions:
   wizardstonecraft.rephighlight:
     description: Permet de mettre en évidence la réputation d'un joueur.
     default: op
+
+  wizardstonecraft.affairenpc:
+      description: Permet de mettre en évidence la réputation d'un joueur.
+      default: op

@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'fr.WizardStoneCraft.WizardStoneCraft'
-version = '0.0.0.5'
+version = '0.0.0.7'
 
 
 repositories {
@@ -42,6 +42,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
     compileOnly "com.github.MilkBowl:VaultAPI:1.7"
     compileOnly ("com.github.booksaw:BetterTeams:4.10.0")
+    compileOnly ("com.github.GriefPrevention:GriefPrevention:17.0.0")
 }
 
 def targetJavaVersion = 21
