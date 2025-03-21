@@ -1,22 +1,71 @@
 name: WizardStoneCraft
-version: '0.0.0.8'
-main: fr.WizardStoneCraft.WizardStoneCraft
+version: '0.0.0.18'
 api-version: 1.21
+main: fr.WizardStoneCraft.WizardStoneCraft
+load: STARTUP
 
 description: 'Plugin Qui permet de gérer les Joueurs, permettant aussi de faire quelques ajustements'
 author: 'Metal54400 and MetalGames - studio'
-website: none
+website: https://discord.gg/dxdrw5t88g
 depend:
   - LuckPerms
   - PlaceholderAPI
+  - GriefPrevention
+  - Vault
 
 softdepend:
   - EssentialsX
-  - Vault
   - BetterTeams
-  - papermc
 
 commands:
+
+
+  givejukebox:
+    description: Permet d'activer ou de désactiver l'utilisation des élytres dans l'End.
+    usage: /givejukebox
+
+  topluck:
+    description: Permet d'activer ou de désactiver l'utilisation des élytres dans l'End.
+    usage: /topluck
+    permission: anitcheat.modo
+
+  elytra:
+    description: Permet d'activer ou de désactiver l'utilisation des élytres dans l'End.
+    usage: /elytra <activer|désactiver>
+    permission: op
+
+  claimlist:
+    description: "Ouvre le menu"
+    permission: claimlist
+
+  claimrename:
+    description: "Ouvre le menu"
+    permission: claimrename
+
+
+  anticheatmenu:
+    description: "Ouvre le menu Anti-Cheat"
+    permission: anticheat.menu
+
+  cook:
+    description: Dé-mute un joueur.
+    usage: /cook
+    permission: wizardstonecraft.cook
+
+  claimmeteo:
+    description: Dé-mute un joueur.
+    usage: /claimmeteo
+    permission: wizardstonecraft.Claimoffspawnmob
+
+  tradeclaim:
+    description: Dé-mute un joueur.
+    usage: /tradeclaim
+    permission: wizardstonecraft.Claimoffspawnmob
+
+  Claimoffspawnmob:
+    description: Dé-mute un joueur.
+    usage: /Claimoffspawnmob
+    permission: wizardstonecraft.Claimoffspawnmob
 
   affairenpc:
     description: Dé-mute un joueur.
@@ -52,7 +101,7 @@ commands:
 
   repmenu:
     description: Voir la réputation de tous les joueurs connectés depuis un menu.
-    usage: /menu
+    usage: /repmenu
 
   broadcast:
     description: Envoie un message global.
@@ -98,9 +147,10 @@ commands:
     permission: wizardstonecraft.rephighlight
 
 permissions:
-  wizardstonecraft.menu:
+  wizardstonecraft.repmenu:
     description: Permet d'accéder au menu de gestion de réputation.
     default: op
+
 
   wizardstonecraft.broadcast:
     description: Permet d'envoyer des messages globaux.
@@ -147,5 +197,15 @@ permissions:
     default: op
 
   wizardstonecraft.affairenpc:
-      description: Permet de mettre en évidence la réputation d'un joueur.
-      default: op
+    description: Permet de mettre en évidence la réputation d'un joueur.
+    default: op
+
+  wizardstonecraft.Claimoffspawnmob:
+    description: Permet de mettre en évidence la réputation d'un joueur.
+    default: op
+  wizardstonecraft.cook:
+    description: Permet de mettre en évidence la réputation d'un joueur.
+    default: op
+  wizardstonecraft.anticheat.modo:
+    description: Permet de mettre en évidence la réputation d'un joueur.
+    default: op

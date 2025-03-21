@@ -9,6 +9,14 @@ tablist:
   header: "§aBienvenue sur le serveur &6Survie"
   footer: "§6Amusez-vous bien sur notre serveur ! &aJoueurs en ligne : {players}"
 
+
+craft_limit: 50
+craft_radius: 5
+
+atm_amount: 100  # Argent gagné en cliquant sur le panneau
+atm_message: "Vous avez retiré %amount% pièces depuis l'ATM !"
+
+
 reputation-status:
   honorable: "§dHonorable"
   good: "§2Bonne"
@@ -43,6 +51,9 @@ addLoreOnCreative: true  # true pour activer, false pour désactiver l'ajout du 
 
 autoBanOnLowReputation: true  # true pour activer, false pour désactiver
 reputationThreshold: -120     # La réputation à partir de laquelle un joueur sera banni
-banDurationDays: 15           # La durée du bannissement en jours
+banDurationDays: 15
 
-
+disable_thorns:
+  enabled: true  # Désactive les enchantements Épine pour les joueurs, mais pas pour les mobs
+  only_pvp: true  # Si activé, désactive uniquement pour les combats entre joueurs
+  mobs_affected: false  # Laisser les mobs affectés par les Épine

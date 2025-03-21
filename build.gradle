@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'fr.WizardStoneCraft.WizardStoneCraft'
-version = '0.0.0.8'
+version = '0.0.0.18'
 
 
 repositories {
@@ -13,9 +13,12 @@ repositories {
         url = "https://repo.papermc.io/repository/maven-public/"
 
     }
+    maven { url = "https://hub.spigotmc.org/nexus/content/repositories/public/" }
     maven {
         url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
     }
+
+
 
     maven {
         name = "sonatype"
@@ -43,6 +46,7 @@ dependencies {
     compileOnly "com.github.MilkBowl:VaultAPI:1.7"
     compileOnly ("com.github.booksaw:BetterTeams:4.10.0")
     compileOnly ("com.github.GriefPrevention:GriefPrevention:17.0.0")
+  // Remplace par la bonne version
 }
 
 def targetJavaVersion = 21
