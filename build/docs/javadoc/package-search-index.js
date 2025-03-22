@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"fr.WizardStoneCraft"},{"l":"fr.WizardStoneCraft.Commands"},{"l":"fr.WizardStoneCraft.PlaceHolderApi"}];updateSearchResults();

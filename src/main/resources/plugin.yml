@@ -1,5 +1,5 @@
 name: WizardStoneCraft
-version: '0.0.0.18'
+version: '0.0.0.19'
 api-version: 1.21
 main: fr.WizardStoneCraft.WizardStoneCraft
 load: STARTUP

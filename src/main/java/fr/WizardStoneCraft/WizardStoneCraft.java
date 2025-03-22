@@ -44,6 +44,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -189,6 +190,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         loadTopLuckConfig();
         startMessageTask();
         config = getConfig();
+        spawnMeteorologistNPC();
         dropChance = config.getDouble("drop-chance", 50.0) / 100.0;
         PlaceHolderApi.checkPlaceholderAPI();
         WizardStoneCraft plugins = this;
@@ -1896,18 +1898,31 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
     }
 
     @EventHandler
-    public void onEntityDamageSSSSS(EntityDamageByEntityEvent event) {
+    public void onEntityDamagesssss(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player) {
             Player player = (Player) event.getDamager();
-            double damage = event.getDamage();
+            double baseDamage = event.getOriginalDamage(EntityDamageEvent.DamageModifier.BASE); // Dégâts sans enchantements/critiques
+            double totalDamage = event.getDamage();
 
-            // Détection KillAura (Dégâts supérieurs à 9)
-            if (damage > 9) {
-                kickPlayer(player, "§7[§4Anticheat§7] Détection KillAura (Dégâts > 9)");
-                alertAdmins(player, "§7[§e?§7] KillAura détecté ! Dégâts: " + damage);
+            // Vérifie si les dégâts de base sont supérieurs à 15
+            if (baseDamage > 15) {
+                // Bannir le joueur avec une raison spécifique
+                Bukkit.getScheduler().runTask(this, () -> {
+                    Bukkit.getBanList(BanList.Type.NAME).addBan(
+                            player.getName(),
+                            "§7[§cBanni§7] Vous avez été banni pour KillAura (Dégâts anormaux > 15)",
+                            null,
+                            "Console"
+                    );
+                    player.kickPlayer("§7[§cBanni§7] Vous avez été banni pour KillAura.");
+                });
+
+                // Avertir les administrateurs
+                alertAdmins(player, "§7[§e?§7] KillAura détecté ! Dégâts de base: " + baseDamage + ", Dégâts totaux: " + totalDamage);
             }
         }
     }
+
 
     private void kickPlayer(Player player, String reason) {
         Bukkit.getScheduler().runTask(this, () -> player.kickPlayer(reason));
@@ -2169,47 +2184,10 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
         return true; // Le joueur est sans stuff
     }
 
-    @EventHandler
-    public void onCraftItem(CraftItemEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) return;
-        Player player = (Player) event.getWhoClicked();
-        UUID uuid = player.getUniqueId();
 
-        // Vérifie si le joueur est proche d’un crafter
-        if (!isNearCrafter(player)) return;
 
-        // Vérifie si l’item crafté est une masse (ne pas limiter)
-        if (event.getRecipe().getResult().getType() == Material.MACE) {
-            return;
-        }
 
-        int craftsToday = craftCounter.getOrDefault(uuid, 0);
-        if (craftsToday >= maxCraftsPerDay) {
-            event.setCancelled(true);
-            player.sendMessage("§7[§e?§7] §cVous avez atteint votre limite de craft pour aujourd’hui §7[§c!§7]");
-            return;
-        }
 
-        // Incrémente le compteur
-        craftCounter.put(uuid, craftsToday + 1);
-    }
-
-    private boolean isNearCrafter(Player player) {
-        Location loc = player.getLocation();
-        int radius = craftRadius;
-
-        for (int x = -radius; x <= radius; x++) {
-            for (int y = -radius; y <= radius; y++) {
-                for (int z = -radius; z <= radius; z++) {
-                    Block block = loc.clone().add(x, y, z).getBlock();
-                    if (block.getType() == Material.CRAFTER) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
 
     @EventHandler
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
@@ -2423,13 +2401,29 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
     }
     }
 
-    public static class Jukeboxmod implements CommandExecutor{
+    public static class Jukeboxmod implements CommandExecutor {
+
+        private static final HashMap<UUID, Long> cooldowns = new HashMap<>();
+        private static final long COOLDOWN_TIME = 50 * 1000; // 50 secondes en millisecondes
+
         @Override
         public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
             if (sender instanceof Player) {
                 Player player = (Player) sender;
-                player.getInventory().addItem(createPortableJukebox());
-                player.sendMessage("§aVous avez reçu un Jukebox Portatif !");
+
+                long currentTime = System.currentTimeMillis();
+                UUID uuid = player.getUniqueId();
+
+                // Vérification du cooldown
+                if (cooldowns.containsKey(uuid) && (currentTime - cooldowns.get(uuid)) < COOLDOWN_TIME) {
+                    long remainingTime = (COOLDOWN_TIME - (currentTime - cooldowns.get(uuid))) / 1000;
+                    player.sendMessage("§cVous devez attendre encore " + remainingTime + " secondes avant de changer la musique !");
+                    return true;
+                }
+
+                playCustomMusic(player);
+                cooldowns.put(uuid, currentTime); // Mise à jour du cooldown
+
                 return true;
             }
             sender.sendMessage("Seuls les joueurs peuvent exécuter cette commande.");
@@ -2458,8 +2452,51 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
             jukebox.setItemMeta(meta);
             return jukebox;
         }
-
     }
+    @EventHandler
+    public void onTridentLightningStrike(ProjectileHitEvent event) {
+        if (event.getEntity() instanceof Trident trident && trident.getShooter() instanceof Player player) {
+            if (trident.getItemStack().getEnchantmentLevel(Enchantment.CHANNELING) > 0) {
+                // Réduire les dégâts de la foudre
+                Entity struckEntity = event.getHitEntity();
+                if (struckEntity != null && struckEntity instanceof LivingEntity) {
+                    double originalDamage = 8.0; // Valeur originale de dégâts de la foudre
+                    double reducedDamage = originalDamage * 0.5; // Réduction des dégâts de 50%
+                    ((LivingEntity) struckEntity).damage(reducedDamage);
+                }
+                // Appliquer un cooldown de 10 secondes
+                long cooldownTime = System.currentTimeMillis() + 10000; // 10 secondes
+                player.setCooldown(trident.getItemStack().getType(), 10000);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onShieldBlock(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player player && event.getDamager() instanceof Player) {
+            ItemStack item = player.getInventory().getItemInMainHand();
+            if (item.getType() == Material.SHIELD) {
+                long lastBlockTime = (long) (player.getLastDamage() - 1000); // Le temps entre les utilisations du bouclier
+                if (System.currentTimeMillis() - lastBlockTime < 1000) {
+                    event.setCancelled(true); // Annuler l'attaque si trop rapide
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBaneOfArthropodsHit(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player player && event.getEntity() instanceof LivingEntity) {
+            ItemStack item = player.getInventory().getItemInMainHand();
+            if (item.containsEnchantment(Enchantment.BANE_OF_ARTHROPODS)) {
+                LivingEntity target = (LivingEntity) event.getEntity();
+                // Appliquer un ralentissement à la cible
+                target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 1)); // 60 ticks de ralentissement
+            }
+        }
+    }
+
+
 
     @EventHandler
     public void onPlayerInteractssss(PlayerInteractEvent event) {
@@ -2530,6 +2567,52 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
             saveTopLuckConfig();
         }
     }
+
+    @EventHandler
+    public void onPlayerBlock(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            if (player.isBlocking()) {
+                event.setCancelled(true); // Annule les dégâts
+                player.sendMessage(ChatColor.GREEN + "Parade réussie ! Vous contre-attaquez !");
+                if (event.getDamager() instanceof Player) {
+                    ((Player) event.getDamager()).damage(4.0); // Inflige 2 cœurs de dégâts à l'attaquant
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onWeatherChangesss(WeatherChangeEvent event) {
+        World world = event.getWorld();
+        Random random = new Random();
+        if (event.toWeatherState()) { // Déclenche un événement météo aléatoire si la pluie commence
+            int chance = random.nextInt(100);
+            if (chance < 30) { // 30% de chance d'avoir un effet spécial
+                if (chance < 15) {
+                    Bukkit.broadcastMessage(ChatColor.RED + "Une tempête a renforcé les monstres !");
+                    world.setThunderDuration(6000);
+                } else {
+                    Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Une pluie acide commence !");
+                    for (Player player : world.getPlayers()) {
+                        if (!player.isInsideVehicle()) {
+                            player.damage(1.0); // Endommage légèrement les joueurs exposés
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    public void spawnMeteorologistNPC() {
+        World world = Bukkit.getWorlds().get(0);
+        Villager meteorologist = (Villager) world.spawnEntity(world.getSpawnLocation(), EntityType.VILLAGER);
+        meteorologist.setCustomName(ChatColor.AQUA + "Météorologue");
+        meteorologist.setCustomNameVisible(true);
+        meteorologist.setProfession(Villager.Profession.LIBRARIAN);
+    }
+
 
     private void saveTopLuckConfig() {
         try {
