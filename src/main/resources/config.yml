@@ -4,12 +4,6 @@ maximum-reputation: 120
 points-kill: -2
 points-join: 4
 
-
-tablist:
-  header: "§aBienvenue sur le serveur &6Survie"
-  footer: "§6Amusez-vous bien sur notre serveur ! &aJoueurs en ligne : {players}"
-
-
 craft_limit: 50
 craft_radius: 5
 

@@ -1,6 +1,6 @@
 name: WizardStoneCraft
-version: '0.0.0.19'
-api-version: 1.21
+version: '0.0.0.23'
+api-version: 1.20
 main: fr.WizardStoneCraft.WizardStoneCraft
 load: STARTUP
 
@@ -12,13 +12,23 @@ depend:
   - PlaceholderAPI
   - GriefPrevention
   - Vault
+  - TAB
 
 softdepend:
   - EssentialsX
   - BetterTeams
 
 commands:
+  giveceleste:
+    description: Ajouter des points de réputation à un joueur.
+    usage: /giveceleste
+    permission: wizardstonecraft.repadd
 
+  repremove:
+    description: Ajouter des points de réputation à un joueur.
+    usage: /repremove <player> <amount>
+    aliases: [ reputationadd ]
+    permission: wizardstonecraft.repadd
 
   givejukebox:
     description: Permet d'activer ou de désactiver l'utilisation des élytres dans l'End.
@@ -134,12 +144,6 @@ commands:
     description: Affiche l'aide sur la réputation.
     usage: /help
     aliases: [aide]
-    permission: wizardstonecraft.help
-
-  tabreload:
-    description: Recharge la configuration du tablist.
-    usage: /tabreload
-    permission: wizardstonecraft.tabreload
 
   rephighlight:
     description: Met en évidence la réputation d'un joueur.
@@ -186,10 +190,6 @@ permissions:
 
   wizardstonecraft.help:
     description: Permet d'afficher l'aide sur les commandes de réputation.
-    default: op
-
-  wizardstonecraft.tabreload:
-    description: Permet de recharger la configuration du tablist.
     default: op
 
   wizardstonecraft.rephighlight:
