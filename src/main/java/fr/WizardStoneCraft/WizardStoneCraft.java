@@ -3,16 +3,23 @@ package fr.WizardStoneCraft;
 
 
 import fr.WizardStoneCraft.Commands.*;
+import fr.WizardStoneCraft.Commands.Anticheat.AntiCheatListener;
 import fr.WizardStoneCraft.Commands.Anticheat.Topluck;
 import fr.WizardStoneCraft.Commands.Claim.*;
+import fr.WizardStoneCraft.Commands.Gems.GemCommand;
+
+import fr.WizardStoneCraft.Commands.Gems.Shop.GemShopCommand;
+import fr.WizardStoneCraft.Commands.Gems.Shop.GemShopListener;
 import fr.WizardStoneCraft.Commands.Reputation.*;
+import fr.WizardStoneCraft.Manager.GemManager;
+
+import fr.WizardStoneCraft.Manager.GemShopManager;
 import fr.WizardStoneCraft.PlaceHolderApi.PlaceHolderApi;
 
 import me.neznamy.tab.api.TabAPI;
 import me.neznamy.tab.api.TabPlayer;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
-import me.ryanhamshire.GriefPrevention.PlayerData;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
@@ -41,7 +48,6 @@ import org.bukkit.event.player.*;
 import org.bukkit.event.raid.RaidSpawnWaveEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
-import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -69,7 +75,7 @@ import static org.bukkit.Bukkit.getPlayer;
 
 public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener {
 
-    private final HashMap<UUID, Integer> clickCounts = new HashMap<>();
+    public final HashMap<UUID, Integer> clickCounts = new HashMap<>();
 
     private final Map<UUID, Long> raidCooldown = new HashMap<>();
     public final HashSet<Long> disabledClaims = new HashSet<Long>();
@@ -80,7 +86,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     private static final long COMBAT_TIME = 15000; // 15 sec
     private File jobsFile;
     private final int REQUIRED_REP = 80;
-    private final HashMap<UUID, Long> protectedPlayers = new HashMap<>();
+    public final HashMap<UUID, Long> protectedPlayers = new HashMap<>();
     private final long PROTECTION_TIME = 90 * 1000;
     private final HashMap<UUID, Long> elytraCooldown = new HashMap<>();
     private final long COOLDOWN_TIME = 4000; // 4 secondes en millisecondes
@@ -91,15 +97,14 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     private FileConfiguration bannedPlayersConfig;
     private Map<UUID, Long> bannedPlayers;
     public static final Map<UUID, Integer> reputation = new HashMap<>();
-    private final Map<UUID, Map<UUID, Long>> killHistory = new HashMap<>();
+    public final Map<UUID, Map<UUID, Long>> killHistory = new HashMap<>();
     private final Map<Player, Integer> playerReputations = new HashMap<>(); // Stocke la réputation des joueurs
     private final Map<Player, Player> selectedPlayers = new HashMap<>();
     List<String> lore = new ArrayList<>(); // Crée une liste vide
     public int MIN_REP;
     public  int MAX_REP;
-    private int pointsKills;
-    private int pointsKill;
-    private int pointsJoin;
+    public int pointsKills;
+    public int pointsJoin;
     private FileConfiguration messages;
     private String tabPrefix;
     private String chatPrefix;
@@ -117,18 +122,18 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     public List<MerchantRecipe> dailyDeals = new ArrayList<>();
     public LocalDate lastUpdate = LocalDate.now();
     private final List<String> blockedCommands = Arrays.asList("/tpa", "/tpahere", "/tpno", "/sethome", "/team sethome","/tpaccept","tpcancel");
-    private final HashMap<UUID, Integer> minedOres = new HashMap<>();
-    private final HashMap<UUID, Long> lastClickTime = new HashMap<>();
+    public final HashMap<UUID, Integer> minedOres = new HashMap<>();
+    public final HashMap<UUID, Long> lastClickTime = new HashMap<>();
     private final HashMap<UUID, Double> lastSpeed = new HashMap<>();
-    private final HashMap<UUID, Long> lastTeleport = new HashMap<>();
-    private final HashMap<UUID, HashMap<UUID, Integer>> killTracking = new HashMap<>();
-    private final HashMap<UUID, Integer> flyWarnings = new HashMap<>();
+    public final HashMap<UUID, Long> lastTeleport = new HashMap<>();
+    public final HashMap<UUID, HashMap<UUID, Integer>> killTracking = new HashMap<>();
+    public final HashMap<UUID, Integer> flyWarnings = new HashMap<>();
     private final Set<Player> alertEnabledPlayers = new HashSet<>();
     private FileConfiguration menuConfig;
     private final HashMap<UUID, Integer> craftCounter = new HashMap<>();
     private int maxCraftsPerDay;
     private int craftRadius;
-    private Economy economy;
+    public Economy economy;
     private int atmAmount;
     private String atmMessage;
     private HashMap<UUID, Integer> sellerReputations;
@@ -150,6 +155,10 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
     private int messageIndex = 0;
     public FileConfiguration topluckConfig;
     private Map<Player, Long> protectionCooldowns;
+    private GemManager gemManager;
+
+
+
     private enum Season {SPRING, SUMMER, AUTUMN, WINTER}
     private Season currentSeason = Season.SPRING;
     private int seasonDuration = 6000; // Durée en ticks (5 minutes = 6000 ticks)
@@ -207,7 +216,9 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         loadMessagese();
         loadMessagesConfig();
         loadTopLuckConfig();
+        GemShopManager shopManager;
         startMessageTask();
+        startClearLaggTask();
         triggerRandomEvents();
         forge = new AdvancedForge();
         config = getConfig();
@@ -222,8 +233,23 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         disableThorns = getConfig().getBoolean("disable_thorns.enabled", true);
         onlyPvp = getConfig().getBoolean("disable_thorns.only_pvp", true);
         mobsAffected = getConfig().getBoolean("disable_thorns.mobs_affected", false);
-
+        AntiCheatListener AntiCheatListener = new AntiCheatListener();
+        RéputationListener réputationListener = new RéputationListener();
+        ClaimListener claimListener = new ClaimListener();
+        getServer().getPluginManager().registerEvents(réputationListener, this);
+        getServer().getPluginManager().registerEvents(AntiCheatListener, this);
+        getServer().getPluginManager().registerEvents(claimListener, this);
         getServer().getPluginManager().registerEvents(this, this);
+        this.gemManager = new GemManager(this);
+        gemManager = new GemManager(this);
+        shopManager = new GemShopManager(this);
+
+
+        getCommand("gemshop").setExecutor(new GemShopCommand(shopManager));
+        getServer().getPluginManager().registerEvents(new GemShopListener(gemManager, shopManager), this);
+        getCommand("gems").setExecutor(new GemCommand(gemManager));
+        getCommand("gemadd").setExecutor(new GemCommand(gemManager));
+        getCommand("gemstop").setExecutor(new GemCommand(gemManager));
         getCommand("repadd").setExecutor(new ManageRepCommand());
         getCommand("repremove").setExecutor(new ManageRepCommand());
         getCommand("Claimoffspawnmob").setExecutor(new claimoffmobspawn());
@@ -257,6 +283,21 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             } else {
                 sender.sendMessage(ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande !");
             }
+            return true;
+        });
+        getCommand("giveremede").setExecutor((sender, command, label, args) -> {
+            if (args.length != 1) {
+                sender.sendMessage(ChatColor.RED + "Usage: /giveremede <joueur>");
+                return true;
+            }
+            Player target = getPlayer(args[0]);
+            if (target == null) {
+                sender.sendMessage(ChatColor.RED + "Joueur introuvable !");
+                return true;
+            }
+            target.getInventory().addItem(createCureItem());
+            sender.sendMessage(ChatColor.GREEN + "Vous avez donné un remède à " + target.getName());
+            target.sendMessage(ChatColor.AQUA + "Vous avez reçu un remède !");
             return true;
         });
         getLogger().info("Anti-Cheat Menu activé !");
@@ -373,7 +414,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
 
 
-    private boolean setupEconomy() {
+    public boolean setupEconomy() {
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) return false;
         economy = rsp.getProvider();
@@ -422,6 +463,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             e.printStackTrace();
         }
     }
+
+
 
     private void giveReward(Player player, String job, int level) {
         List<ItemStack> rewards = new ArrayList<>();
@@ -520,7 +563,10 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         // Vérification du bannissement
 
     }
-
+    public static void addReputation(UUID playerUUID, int amount) {
+        int currentReputation = reputation.getOrDefault(playerUUID, 0);
+        reputation.put(playerUUID, currentReputation + amount);
+    }
 
 
 
@@ -620,7 +666,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         if (reputation >= -120) return getConfig().getString("reputation-prefixe.horrible");
         return "";
     }
-    private String getLuckPermsPrefix(Player player) {
+    public String getLuckPermsPrefix(Player player) {
         if (luckPerms == null) return ""; // LuckPerms non configuré
 
         User user = luckPerms.getUserManager().getUser(player.getUniqueId());
@@ -634,86 +680,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
 
 
 
-@EventHandler
-public void onPlayerRightClick(PlayerInteractEvent event) {
-    Player player = event.getPlayer();
-    ItemStack item = player.getInventory().getItemInMainHand();
 
-    // Vérifier si le joueur tient un bâton et fait un clic droit
-    if (item.getType() == Material.STICK && event.getAction().toString().contains("RIGHT_CLICK")) {
-        Location loc = player.getLocation();
-        Claim claim = GriefPrevention.instance.dataStore.getClaimAt(loc, false, null);
-
-        if (claim == null) {
-            player.sendMessage(ChatColor.RED + "§7(§c!§7)§c Ce terrain n'est pas claim.");
-            return;
-        }
-
-        String owner = claim.getOwnerName();
-        player.sendMessage(ChatColor.GREEN + "§7(§e!§7) Ce terrain appartient à : " + ChatColor.GOLD + owner);
-
-        // Récupérer les coins du claim
-        Location min = claim.getLesserBoundaryCorner();
-        Location max = claim.getGreaterBoundaryCorner();
-        World world = min.getWorld();
-
-        // Vérifier si le monde est valide
-        if (world == null) {
-            player.sendMessage(ChatColor.RED + "§7(§c!§7)§c Erreur : Impossible de récupérer le monde.");
-            return;
-        }
-
-        // Utilisation d'un HashSet pour éviter les doublons et améliorer la performance
-        Set<Block> placedBlocks = new HashSet<>();
-
-        // Placer les bordures avec laine jaune et torches
-        for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
-            addBlockIfValid(world, x, min.getBlockY(), min.getBlockZ(), Material.YELLOW_WOOL, placedBlocks);
-            addBlockIfValid(world, x, min.getBlockY(), max.getBlockZ(), Material.YELLOW_WOOL, placedBlocks);
-        }
-        for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
-            addBlockIfValid(world, min.getBlockX(), min.getBlockY(), z, Material.YELLOW_WOOL, placedBlocks);
-            addBlockIfValid(world, max.getBlockX(), min.getBlockY(), z, Material.YELLOW_WOOL, placedBlocks);
-        }
-
-        // Ajouter glowstone aux coins du claim
-        addBlockIfValid(world, min.getBlockX(), min.getBlockY(), min.getBlockZ(), Material.GLOWSTONE, placedBlocks);
-        addBlockIfValid(world, max.getBlockX(), min.getBlockY(), max.getBlockZ(), Material.GLOWSTONE, placedBlocks);
-        addBlockIfValid(world, min.getBlockX(), min.getBlockY(), max.getBlockZ(), Material.GLOWSTONE, placedBlocks);
-        addBlockIfValid(world, max.getBlockX(), min.getBlockY(), min.getBlockZ(), Material.GLOWSTONE, placedBlocks);
-
-        // Ajouter des torches à intervalles réguliers sur les bords
-        for (int x = min.getBlockX(); x <= max.getBlockX(); x += 5) {
-            addBlockIfValid(world, x, min.getBlockY() + 1, min.getBlockZ(), Material.TORCH, placedBlocks);
-            addBlockIfValid(world, x, min.getBlockY() + 1, max.getBlockZ(), Material.TORCH, placedBlocks);
-        }
-        for (int z = min.getBlockZ(); z <= max.getBlockZ(); z += 5) {
-            addBlockIfValid(world, min.getBlockX(), min.getBlockY() + 1, z, Material.TORCH, placedBlocks);
-            addBlockIfValid(world, max.getBlockX(), min.getBlockY() + 1, z, Material.TORCH, placedBlocks);
-        }
-
-        // Supprimer les blocs après 10 secondes
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Block block : placedBlocks) {
-                    if (block.getType() != Material.AIR) {
-                        block.setType(Material.AIR);
-                    }
-                }
-            }
-        }.runTaskLater(WizardStoneCraft.getInstance(), 200L);
-    }
-}
-
-    // Méthode pour placer un bloc temporaire seulement si l'emplacement est libre
-    private void addBlockIfValid(World world, int x, int y, int z, Material material, Set<Block> placedBlocks) {
-        Block block = world.getBlockAt(x, y, z);
-        if (block.getType() == Material.AIR) {
-            block.setType(material);
-            placedBlocks.add(block);
-        }
-    }
 
 @EventHandler
 public void onPlayerDeaths(PlayerDeathEvent event) {
@@ -729,147 +696,8 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
     }
 }
 
-    //reputation
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        UUID playerId = player.getUniqueId();
-
-        // Vérifie si la réputation du joueur est inférieure ou égale à la valeur seuil
-        int newRep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId)) + pointsJoin;
-        reputation.put(playerId, Math.min(newRep, MAX_REP));
-        player.sendMessage(getMessage("reputation_gained"));
-        savePlayerReputation(playerId, Math.min(newRep, MAX_REP));
-        if (isPassive(player)) {
-            player.setDisplayName(ChatColor.GREEN + player.getName());
-        } else {
-            player.setDisplayName(ChatColor.AQUA + player.getName()); // Cyan pour joueurs protégés
-        }
-        protectedPlayers.put(player.getUniqueId(), System.currentTimeMillis());
-        player.sendMessage("§7[§e?§7] §aVous êtes protégé pendant 90 secondes après votre connexion §7[§c!§7]");
-
-    }
-
-    @EventHandler
-    public void onPlayerChat(AsyncPlayerChatEvent event) {
-        Player player = event.getPlayer();
-        UUID playerId = player.getUniqueId();
-        int rep = reputation.getOrDefault(playerId, loadPlayerReputation(playerId));
-        String prefix = getReputationStatus(rep);
-        String gradePrefix = getLuckPermsPrefix(player);
-        event.setFormat(prefix + " " +  ChatColor.RESET + "<%1$s> %2$s");
-        Player players = event.getPlayer();
-
-    }
-    @EventHandler
-    public void onPlayerChats(AsyncPlayerChatEvent event) {
-        Player player = event.getPlayer();
-        UUID playerId = player.getUniqueId();
-        long currentTime = System.currentTimeMillis();
-
-        // Vérifie si le joueur est mute
-        if (mutedPlayers.containsKey(playerId)) {
-            long muteExpiration = mutedPlayers.get(playerId);
-            if (muteExpiration > currentTime) {
-                player.sendMessage(getMessage("chat_muted"));
-                event.setCancelled(true);
-            } else {
-                unmutePlayer(playerId); // Supprime le mute si expiré
-            }
-        }
-    }
-    public void unmutePlayer(UUID playerId) {
-        mutedPlayers.remove(playerId);
-    }
-
-    @EventHandler
-    public void onPlayerDeathsssssssss(PlayerDeathEvent event) {
-        Player victim = (Player) event.getEntity();
-        ;
-        Player killer = victim.getKiller();
-
-        if (killer == null || killer == victim) return; // Pas de suicide ou de mort sans tueur
-
-        UUID killerUUID = killer.getUniqueId();
-        UUID victimUUID = victim.getUniqueId();
-        long currentTime = System.currentTimeMillis();
-
-        // Initialiser l'historique du tueur si inexistant
-        killHistory.putIfAbsent(killerUUID, new HashMap<>());
-
-        HashMap<UUID, Long> killerRecords = (HashMap<UUID, Long>) killHistory.get(killerUUID);
-
-        // Vérifie si le tueur a déjà tué cette victime
-        if (killerRecords.containsKey(victimUUID)) {
-            long lastKillTime = killerRecords.get(victimUUID);
-
-            // Vérifie si c'était dans les dernières 48 heures
-            if (currentTime - lastKillTime < 172800000L) { // 48h en millisecondes
-                killer.sendMessage(net.md_5.bungee.api.ChatColor.RED + "⚠ Focus de kill détecté ! Vous perdez 20 points de réputation.");
-                victim.sendMessage(net.md_5.bungee.api.ChatColor.YELLOW + "🚨 " + killer.getName() + " vous a tué en moins de 48h. Un modérateur peut être alerté.");
-
-                // Appliquer la pénalité de réputation
-                applyReputationPenalty(killer, 20);
-
-                // Notifier les modérateurs
-                for (Player admin : Bukkit.getOnlinePlayers()) {
-                    if (admin.hasPermission("wizardstonecraft.moderator")) {
-                        admin.sendMessage(net.md_5.bungee.api.ChatColor.RED + "⚠ " + killer.getName() + " a tué " + victim.getName() + " en moins de 48h !");
-                        admin.sendMessage(net.md_5.bungee.api.ChatColor.RED + "➡ Une intervention peut être nécessaire.");
-                    }
-                }
-
-                return;
-            }
-        }
-
-        // Mettre à jour l'historique du tueur
-        killerRecords.put(victimUUID, currentTime);
-    }
-
-    private void applyReputationPenalty(Player player, int amount) {
-        // Exemple : Ajout d'une méthode pour gérer la réputation du joueur
-        WizardStoneCraft.getInstance().getReputation(player);
-        WizardStoneCraft.getInstance().removeReputation(player, amount);
-    }
-
-    @EventHandler
-    public void onPlayerKill(PlayerDeathEvent event) {
-        Player victim = event.getEntity();
-        Player killer = victim.getKiller();
-
-        if (killer != null) {
-            UUID killerId = killer.getUniqueId();
-
-            // Charger la réputation actuelle
-            pointsKill = reputation.getOrDefault(killerId, loadPlayerReputation(killerId));
 
 
-            // Appliquer une perte de réputation (minimum 0)
-            int newRep = Math.max(pointsKills, 0);  // Réduction de la réputation avec un minimum de 0
-
-            // Mettre à jour la réputation
-            reputation.put(killerId, newRep);
-            savePlayerReputation(killerId, newRep);
-
-            // Envoyer un message au joueur
-            String message = getMessage("reputation_lost");
-            if (message != null) {
-                killer.sendMessage(ChatColor.RED + message.replace("%points%", String.valueOf(newRep)));
-            } else {
-                killer.sendMessage(ChatColor.RED + "§7[§e?§7]§c Vous avez perdu de la réputation §7[§c!§7] Nouvelle réputation : " + newRep);
-            }
-            killer.sendMessage(ChatColor.RED + "§7[§e?§7]§c Votre Réputation est de " + newRep + "§7[§c!§7]");
-        }
-        //nullllll
-    }
-
-    //reputation
-
-
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {}
 
     public void loadMessagese() {
         File file = new File(getDataFolder(), "messages.yml");
@@ -878,10 +706,6 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
         }
         messages = YamlConfiguration.loadConfiguration(file);
     }
-
-
-
-
 
 
     /**
@@ -899,11 +723,15 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
         if (config == null || !config.getBoolean("addLoreOnCreative", true)) return;
 
         // Récupère l'item déplacé
-        ItemStack cursorItem = event.getCursor();   // Item tenu par la souris
-        ItemStack currentItem = event.getCurrentItem(); // Item dans l'inventaire
+        ItemStack cursorItem = event.getCursor();
+        ItemStack currentItem = event.getCurrentItem();
 
-        if (cursorItem != null) applyRefundLore(player, cursorItem);
-        if (currentItem != null) applyRefundLore(player, currentItem);
+        if (cursorItem != null && cursorItem.getType() != Material.AIR) {
+            applyRefundLore(player, cursorItem);
+        }
+        if (currentItem != null && currentItem.getType() != Material.AIR) {
+            applyRefundLore(player, currentItem);
+        }
     }
 
     /**
@@ -913,20 +741,18 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
         if (item == null || item.getType() == Material.AIR) return;
 
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) meta = Bukkit.getItemFactory().getItemMeta(item.getType());
         if (meta == null) return; // Impossible de modifier cet item
 
         String staffName = player.getName();
-        String loreMessage = getMessage("loreitem") + staffName;
+        String loreMessage = getMessage("loreitem").replace("{staff}", staffName);
 
-        // Remplace le lore existant par un seul message
-        List<String> lore = new ArrayList<>();
-        lore.add(loreMessage);
-        meta.setLore(lore);
+        // Met à jour le lore
+        meta.setLore(Collections.singletonList(loreMessage));
         item.setItemMeta(meta);
 
         Bukkit.getLogger().info("[ItemsLog] Un item a été remboursé par " + staffName);
     }
+
 
 
     public void addRefundedPlayer(Player player) {
@@ -942,7 +768,6 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
 
     @EventHandler
     public void onInventoryClickssss(InventoryClickEvent event) {
-
 
         if (event.getView().getTitle().equals("RepGui")) {
             event.setCancelled(true);
@@ -1392,7 +1217,7 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
                         event.getPotion().getShooter() instanceof Player) {
 
                     Player shooter = (Player) event.getPotion().getShooter();
-                    if (isInClaim(shooter.getLocation())) {
+                    if (ClaimListener.isInClaim(shooter.getLocation())) {
                         shooter.sendMessage("§7[§e?§7] Vous ne pouvez pas utiliser de potions persistantes de faiblesse dans un claim.");
                         event.setCancelled(true);
                         return;
@@ -1438,182 +1263,31 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
         return Math.abs(x) > 8000 || Math.abs(z) > 8000;
     }
 
-    @EventHandler
-    public void onBlockBreaks(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        Material block = event.getBlock().getType();
-        UUID uuid = player.getUniqueId();
 
-        // Détection X-Ray
-        if (block == Material.DIAMOND_ORE || block == Material.EMERALD_ORE || block == Material.ANCIENT_DEBRIS) {
-            minedOres.put(uuid, minedOres.getOrDefault(uuid, 0) + 1);
 
-            // Réduction du compteur après 30 secondes
-            Bukkit.getScheduler().runTaskLater(this, () ->
-                    minedOres.put(uuid, minedOres.get(uuid) - 1), 600L);
 
-            // Vérification du X-Ray
-            if (minedOres.get(uuid) > 5) {
-                alertAdmins(player, "§7[§e?§7] X-Ray détecté ! (minage suspect de minerais rares)");
-
-                // Bannissement immédiat du joueur
-                Bukkit.getScheduler().runTask(this, () -> {
-                    player.kickPlayer("§7[§cBanni§7] Vous êtes banni. Raison : Vous avez utilisé X-Ray.");
-                    Bukkit.getBanList(BanList.Type.NAME).addBan(player.getName(),
-                            "§cVous avez été banni pour X-Ray.", null, "Console");
-                });
-            }
-        }
+    public void banPlayer(Player player, String reason) {
+        Bukkit.getScheduler().runTask(this, () -> {
+            Bukkit.getBanList(BanList.Type.NAME).addBan(player.getName(), reason, null, "Console");
+            player.kickPlayer(ChatColor.RED + "[Banni] " + reason);
+        });
     }
 
-    @EventHandler
-    public void onPlayerMove(PlayerMoveEvent event) {
-        Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
-
-        // Détection Fly Hack (Kick après 3 détections)
-        if (!player.isOnGround() && player.getGameMode() != GameMode.CREATIVE) {
-            if (player.getVelocity().getY() > 0.5) {
-                flyWarnings.put(uuid, flyWarnings.getOrDefault(uuid, 0) + 1);
-                alertAdmins(player, "§7[§e?§7] Fly hack détecté ! (" + flyWarnings.get(uuid) + "/3)");
-
-                if (flyWarnings.get(uuid) >= 3) {
-                    player.kickPlayer(ChatColor.RED + "§7[§e?§7] Fly hack détecté ! Vous avez été expulsé du serveur.");
-                    flyWarnings.remove(uuid); // Réinitialiser le compteur après le kick
-                }
-            }
-        }
-
-        // Détection Speed Hack
-        double speed = event.getFrom().distance(event.getTo());
-        if (speed > 0.7 && lastSpeed.containsKey(uuid) && (speed / lastSpeed.get(uuid)) > 2) {
-            alertAdmins(player, "§7[§e?§7] Speed hack détecté !");
-        }
-        lastSpeed.put(uuid, speed);
-    }
-
-    @EventHandler
-    public void onPlayerInteractsss(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
-        long now = System.currentTimeMillis();
-
-        // Détection AutoClicker (CPS)
-        lastClickTime.putIfAbsent(uuid, now);
-        clickCounts.put(uuid, clickCounts.getOrDefault(uuid, 0) + 1);
-
-        if (now - lastClickTime.get(uuid) >= 1000) { // Vérification chaque seconde
-            if (clickCounts.get(uuid) > 10) { // CPS supérieur à 10
-                kickPlayer(player, "§7[§4Anticheat§7] Détection AutoClicker (CPS > 10)");
-                alertAdmins(player, "§7[§e?§7] AutoClicker détecté ! CPS: " + clickCounts.get(uuid));
-            }
-            lastClickTime.put(uuid, now);
-            clickCounts.put(uuid, 0);
-        }
-    }
-
-    @EventHandler
-    public void onEntityDamagesssss(EntityDamageByEntityEvent event) {
-        if (event.getDamager() instanceof Player) {
-            Player player = (Player) event.getDamager();
-            double baseDamage = event.getOriginalDamage(EntityDamageEvent.DamageModifier.BASE); // Dégâts sans enchantements/critiques
-            double totalDamage = event.getDamage();
-
-            // Vérifie si les dégâts de base sont supérieurs à 15
-            if (baseDamage > 15) {
-                // Bannir le joueur avec une raison spécifique
-                Bukkit.getScheduler().runTask(this, () -> {
-                    Bukkit.getBanList(BanList.Type.NAME).addBan(
-                            player.getName(),
-                            "§7[§cBanni§7] Vous avez été banni pour KillAura (Dégâts anormaux > 15)",
-                            null,
-                            "Console"
-                    );
-                    player.kickPlayer("§7[§cBanni§7] Vous avez été banni pour KillAura.");
-                });
-
-                // Avertir les administrateurs
-                alertAdmins(player, "§7[§e?§7] KillAura détecté ! Dégâts de base: " + baseDamage + ", Dégâts totaux: " + totalDamage);
-            }
-        }
-    }
-
-
-    private void kickPlayer(Player player, String reason) {
+    public void kickPlayer(Player player, String reason) {
         Bukkit.getScheduler().runTask(this, () -> player.kickPlayer(reason));
     }
 
-    @EventHandler
-    public void onPlayerTeleportss(PlayerTeleportEvent event) {
-        Player player = event.getPlayer();
-        lastTeleport.put(player.getUniqueId(), System.currentTimeMillis());
-    }
 
-    @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent event) {
-        Player victim = event.getEntity();
-        Player killer = victim.getKiller();
-
-        if (killer != null) {
-            UUID killerUUID = killer.getUniqueId();
-            UUID victimUUID = victim.getUniqueId();
-            long now = System.currentTimeMillis();
-
-            // Détection TP Kill
-            if (lastTeleport.containsKey(killerUUID) && now - lastTeleport.get(killerUUID) < 1000000) {
-                alertAdmins(killer, "TP Kill détecté ! (Kill immédiatement après un TP)");
-            }
-
-            // Détection Focus (Kill le même joueur 3 fois en 5 minutes)
-            killTracking.putIfAbsent(killerUUID, new HashMap<>());
-            HashMap<UUID, Integer> victimKills = killTracking.get(killerUUID);
-            victimKills.put(victimUUID, victimKills.getOrDefault(victimUUID, 0) + 1);
-
-            Bukkit.getScheduler().runTaskLater(this, () -> {
-                if (killTracking.containsKey(killerUUID) && killTracking.get(killerUUID).containsKey(victimUUID)) {
-                    killTracking.get(killerUUID).put(victimUUID, killTracking.get(killerUUID).get(victimUUID) - 1);
-                }
-            }, 6000L); // Retire le kill après 5 minutes
-
-            if (victimKills.get(victimUUID) >= 3) {
-                alertAdmins(killer, "Focus détecté ! (A tué " + victim.getName() + " 3 fois en 5 minutes)");
-            }
-        }
-    }
-
-    private void alertAdmins(Player player, String reason) {
-        String message = ChatColor.RED + "[AntiCheat] " + ChatColor.YELLOW + player.getName() + " " + ChatColor.RED + "est suspecté de triche ! (" + reason + ")";
-        for (Player admin : Bukkit.getOnlinePlayers()) {
-            if (admin.hasPermission("anticheat.alerts")) {
-                admin.sendMessage(message);
-            }
-        }
-        getLogger().warning(message); // Message dans la console
+    public void alertAdmins(Player player, String reason) {
+        String message = ChatColor.RED + "[AntiCheat] " + ChatColor.YELLOW + player.getName() + " suspecté de triche ! (" + reason + ")";
+        Bukkit.getOnlinePlayers().stream()
+                .filter(admin -> admin.hasPermission("anticheat.alerts"))
+                .forEach(admin -> admin.sendMessage(message));
+        getLogger().warning(message);
     }
 
     // Méthode de vérification de claim via GriefPrevention
-    private boolean isInClaim(Location loc) {
-        Claim claim = GriefPrevention.instance.dataStore.getClaimAt(loc, false, null);
-        return claim != null;
-    }
-    @EventHandler
-    public void onInventoryClicks(InventoryClickEvent event) {
-        if (event.getView().getTitle().equals(ChatColor.DARK_RED + "⚠ Menu Anti-Cheat ⚠")) {
-            event.setCancelled(true);
-            Player player = (Player) event.getWhoClicked();
 
-            if (event.getSlot() == 4) {
-                if (alertEnabledPlayers.contains(player)) {
-                    alertEnabledPlayers.remove(player);
-                    player.sendMessage(ChatColor.RED + "❌ Vous ne recevrez plus les alertes de l'anti-cheat.");
-                } else {
-                    alertEnabledPlayers.add(player);
-                    player.sendMessage(ChatColor.GREEN + "✅ Vous recevrez maintenant les alertes de l'anti-cheat.");
-                }
-                openMenus(player);
-            }
-        }
-    }
 
     public void sendAntiCheatAlert(Player suspect, String reason) {
         String message = ChatColor.RED + "[AntiCheat] " + ChatColor.YELLOW + suspect.getName() + ChatColor.RED + " est suspecté de triche ! (" + reason + ")";
@@ -2333,7 +2007,7 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     if (infectedPlayers.containsKey(player.getUniqueId())) {
                         applyDiseaseEffects(player);
-                    } else if (random.nextInt(100) < 5) { // 5% de chance de tomber malade
+                    } else if (random.nextInt(100) < 5) { // 5% de chance d'infection
                         infectPlayer(player);
                     }
                 }
@@ -2343,16 +2017,16 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
 
     private void infectPlayer(Player player) {
         infectedPlayers.put(player.getUniqueId(), System.currentTimeMillis());
-        player.sendMessage(ChatColor.RED + "§7[§e?§7]§c Vous vous sentez malade... ");
+        player.sendMessage(ChatColor.RED + "§7[§e?§7]§c Vous vous sentez malade...");
     }
 
     private void applyDiseaseEffects(Player player) {
         player.sendMessage(ChatColor.DARK_RED + "§7[§e?§7]§c Vous êtes malade ! §aTrouvez un remède...");
-        player.setFoodLevel(player.getFoodLevel() - 1); // Affame progressivement
+        player.setFoodLevel(Math.max(0, player.getFoodLevel() - 1)); // Réduit la faim
     }
 
     @EventHandler
-    public void onPlayerMovess(PlayerMoveEvent event) {
+    public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         if (infectedPlayers.containsKey(player.getUniqueId())) {
             for (Player nearby : player.getNearbyEntities(3, 3, 3).stream().filter(e -> e instanceof Player).map(e -> (Player) e).toList()) {
@@ -2361,6 +2035,32 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onPlayerUseCure(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        if (infectedPlayers.containsKey(player.getUniqueId()) && event.getItem() != null && isCureItem(event.getItem())) {
+            event.setCancelled(true);
+            infectedPlayers.remove(player.getUniqueId());
+            player.getInventory().removeItem(event.getItem());
+            player.sendMessage(ChatColor.GREEN + "§7[§e?§7]§a Vous avez été guéri !");
+        }
+    }
+
+    private ItemStack createCureItem() {
+        ItemStack cure = new ItemStack(Material.POTION);
+        ItemMeta meta = cure.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.AQUA + "Remède");
+            cure.setItemMeta(meta);
+        }
+        return cure;
+    }
+
+    private boolean isCureItem(ItemStack item) {
+        if (item == null || item.getItemMeta() == null) return false;
+        return item.getItemMeta().getDisplayName().equals(ChatColor.AQUA + "Remède");
     }
 
     public void startVolcanicEruption(Location location) {
@@ -2555,7 +2255,7 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
 
     // Gérer les interactions dans l'interface de la forge
     @EventHandler
-    public void onInventoryClickssssssssss(org.bukkit.event.inventory.InventoryClickEvent event) {
+    public void onInventoryClickssssssssss(InventoryClickEvent event) {
         Inventory inventory = event.getInventory();
         if (inventory.getContents().equals("Forge Avancée")) {
             Player player = (Player) event.getWhoClicked();
@@ -2704,7 +2404,7 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
         }
 
         // Méthode pour obtenir le joueur le plus proche d'un monstre
-        private Player getClosestPlayer(org.bukkit.Location location) {
+        private Player getClosestPlayer(Location location) {
             double closestDistance = Double.MAX_VALUE;
             Player closestPlayer = null;
             for (Player player : Bukkit.getOnlinePlayers()) {
@@ -2947,8 +2647,48 @@ public void onPlayerDeaths(PlayerDeathEvent event) {
         boss.getWorld().playSound(boss.getLocation(), Sound.ENTITY_WITHER_DEATH, 1.0f, 0.5f);
         boss.getWorld().dropItemNaturally(boss.getLocation(), new ItemStack(Material.NETHER_STAR, 1));
     }
+    private void startClearLaggTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                broadcastWarning(60);
+                Bukkit.getScheduler().runTaskLater(getInstance(), () -> broadcastWarning(30), 30 * 20L);
+                Bukkit.getScheduler().runTaskLater(getInstance(),instance.clearEntities(), 60 * 20L);
+            }
+        }.runTaskTimer(this, 0, 3600 * 20L); // 1 heure en ticks
+    }
 
+    private void broadcastWarning(int seconds) {
+        String message = ChatColor.RED + "§7[§e?§7] [ClearLagg]§c " + "Suppression des entités dans " + seconds + " secondes !";
+        Bukkit.broadcastMessage(message);
+    }
+
+    public @NotNull Runnable clearEntities() {
+        int removed = 0;
+        for (Entity entity : Bukkit.getWorlds().get(0).getEntities()) {
+            if (entity instanceof Item || entity instanceof LivingEntity) {
+                if (entity instanceof Player || isProtectedEntity(entity)) {
+                    continue; // Ne pas supprimer
+                }
+                entity.remove();
+                removed++;
+            }
+        }
+        Bukkit.broadcastMessage(ChatColor.GREEN + "[ClearLagg] " + removed + " entités supprimées !");
+        return null;
+    }
+
+    private boolean isProtectedEntity(Entity entity) {
+        return entity.getType() == EntityType.VILLAGER ||
+                entity.getType() == EntityType.ARMOR_STAND ||
+                entity.getType() == EntityType.BOAT ||
+                entity.getType() == EntityType.MINECART ||
+                (entity instanceof LivingEntity && entity.getCustomName() != null);
+    }
 }
+
+
+
 
 
 

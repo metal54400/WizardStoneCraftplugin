@@ -1,6 +1,6 @@
 name: WizardStoneCraft
-version: '0.0.0.23'
-api-version: 1.20
+version: '0.0.0.25'
+api-version: 1.21
 main: fr.WizardStoneCraft.WizardStoneCraft
 load: STARTUP
 
@@ -19,6 +19,20 @@ softdepend:
   - BetterTeams
 
 commands:
+
+  gems:
+    description: Voir les gems d’un joueur
+  gemadd:
+    description: Ajouter des gems à un joueur
+    permission: gems.add
+  gemstop:
+    description: Voir le classement des gems
+
+  giveremede:
+    description: Ajouter des points de réputation à un joueur.
+    usage: /giveremede
+    permission: wizardstonecraft.repadd
+
   giveceleste:
     description: Ajouter des points de réputation à un joueur.
     usage: /giveceleste
