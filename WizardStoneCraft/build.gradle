@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'fr.WizardStoneCraft'
-version = '0.0.0.69-1.21.5'
+version = '0.0.0.70-1.21.5'
 
 repositories {
     mavenCentral()
