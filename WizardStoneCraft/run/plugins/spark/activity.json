@@ -1,0 +1,15 @@
+[
+  {
+    "user": {
+      "type": "player",
+      "name": "metal54400",
+      "uniqueId": "e5fd6b2a-8c6d-3d16-8fea-29bcfb9dd903"
+    },
+    "time": 1750518750562,
+    "type": "Profiler (live)",
+    "data": {
+      "type": "url",
+      "value": "https://spark.lucko.me/A7xzB7Tr27"
+    }
+  }
+]

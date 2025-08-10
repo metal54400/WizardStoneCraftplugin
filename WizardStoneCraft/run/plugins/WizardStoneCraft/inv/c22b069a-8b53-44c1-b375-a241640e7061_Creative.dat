@@ -1,0 +1,79 @@
+inventory:
+- ==: org.bukkit.inventory.ItemStack
+  v: 3953
+  type: WHEAT_SEEDS
+  amount: 2
+  meta:
+    ==: ItemMeta
+    meta-type: UNSPECIFIC
+    lore:
+    - '{"text":"","extra":[{"text":"Remboursé par ","obfuscated":false,"italic":false,"underlined":false,"strikethrough":false,"color":"gray","bold":false},{"text":"metal54400","italic":false,"color":"aqua"}]}'
+- ==: org.bukkit.inventory.ItemStack
+  v: 3953
+  type: ROTTEN_FLESH
+  amount: 2
+- ==: org.bukkit.inventory.ItemStack
+  v: 3953
+  type: ARROW
+- ==: org.bukkit.inventory.ItemStack
+  v: 3953
+  type: BONE
+  amount: 2
+- ==: org.bukkit.inventory.ItemStack
+  v: 3953
+  type: DIAMOND_SWORD
+  meta:
+    ==: ItemMeta
+    meta-type: UNSPECIFIC
+    lore:
+    - '{"text":"","extra":[{"text":"Remboursé par ","obfuscated":false,"italic":false,"underlined":false,"strikethrough":false,"color":"gray","bold":false},{"text":"metal54400","italic":false,"color":"aqua"}]}'
+- null
+- ==: org.bukkit.inventory.ItemStack
+  v: 3953
+  type: SAND
+  meta:
+    ==: ItemMeta
+    meta-type: UNSPECIFIC
+    lore:
+    - '{"text":"","extra":[{"text":"Remboursé par ","obfuscated":false,"italic":false,"underlined":false,"strikethrough":false,"color":"gray","bold":false},{"text":"metal54400","italic":false,"color":"aqua"}]}'
+- ==: org.bukkit.inventory.ItemStack
+  v: 3953
+  type: SAND
+  meta:
+    ==: ItemMeta
+    meta-type: UNSPECIFIC
+    lore:
+    - '{"text":"","extra":[{"text":"Remboursé par ","obfuscated":false,"italic":false,"underlined":false,"strikethrough":false,"color":"gray","bold":false},{"text":"metal54400","italic":false,"color":"aqua"}]}'
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null

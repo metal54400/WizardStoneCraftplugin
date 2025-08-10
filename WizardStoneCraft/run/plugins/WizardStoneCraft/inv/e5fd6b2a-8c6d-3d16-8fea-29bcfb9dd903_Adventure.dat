@@ -1,0 +1,48 @@
+inventory:
+- ==: org.bukkit.inventory.ItemStack
+  v: 3953
+  type: SAND
+  amount: 12
+- ==: org.bukkit.inventory.ItemStack
+  v: 3953
+  type: DIRT
+  amount: 6
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null
+- null

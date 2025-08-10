@@ -1,0 +1,10 @@
+
+
+ # default settings for all groups, all groups will take properties from this section unless player's primary group overrides a specific setting
+_DEFAULT_:
+  tabprefix: "%wizardstonecraft_voicechatprefixe% %luckperms-prefix% "
+  tagprefix: "%wizardstonecraft_voicechatprefixe% %luckperms-prefix% "
+  customtabname: "&f %player%"
+  tabsuffix: "%luckperms-suffix%"
+
+

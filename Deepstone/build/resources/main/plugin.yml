@@ -1,0 +1,14 @@
+name: Deepstone
+version: '0.0.0.9-1.21.5'
+main: fr.DeepStone.WizardStoneCraft.Deepstone
+api-version: '1.21'
+authors: [METAL54400]
+description: Téléporte les animaux en laisse avec le joueur
+
+commands:
+  traiterboutique:
+    description: Exécute les commandes de la boutique
+    usage: /traiterboutique
+  site-deepstone-boutique:
+    description: ouvrir une page web sur le site off
+    usage: /site-deepstone-boutique

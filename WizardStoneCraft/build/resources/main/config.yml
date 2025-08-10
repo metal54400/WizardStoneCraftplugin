@@ -1,0 +1,70 @@
+
+minimum-reputation: -120
+maximum-reputation: 120
+points-kill: -2
+points-join: 3
+
+atm_amount: 100  # Argent gagné en cliquant sur le panneau
+atm_message: "Vous avez retiré %amount% pièces depuis l'ATM !"
+
+
+reputation-status:
+  honorable: "§dHonorable"
+  good: "§2Bonne"
+  correct: "§acorrect"
+  neutral: "§7Neutre"
+  dangerous: "§6Dangereux"
+  bad: "§cMauvaise"
+  horrible: "§4Horrible"
+
+reputation-prefixe:
+  honorable: "§d☬ Honorable§7"
+  good: "§2☬ Bonne§7"
+  correct: "§a☬ correct§7"
+  neutral: "§7☬ Neutre§7"
+  dangerous: "§6☬ Dangereux§7"
+  bad: "§c☬ Mauvaise§7"
+  horrible: "§4☬ Horrible§7"
+
+reputation-prefix:
+    honorable: "§d☬"
+    good: "§2☬"
+    correct: "§a☬"
+    neutral: "§7☬"
+    dangerous: "§6☬"
+    bad: "§c☬"
+    horrible: "§4☬"
+
+    drop-chance: 50.0
+
+
+addLoreOnCreative: true
+loreitem: "&7Remboursé par &b{staff}"
+# true pour activer, false pour désactiver l'ajout du lore
+
+autoBanOnLowReputation: true  # true pour activer, false pour désactiver
+reputationThreshold: -120     # La réputation à partir de laquelle un joueur sera banni
+banDurationDays: 15
+
+anticheat-enabled: false
+
+disable_thorns:
+  enabled: true  # Désactive les enchantements Épine pour les joueurs, mais pas pour les mobs
+  only_pvp: true  # Si activé, désactive uniquement pour les combats entre joueurs
+  mobs_affected: false  # Laisser les mobs affectés par les Épine
+
+# Durée de protection après téléportation (en secondes)
+teleport_protection_seconds: 90
+
+# Durée du combat actif (en secondes)
+combat_duration_seconds: 15
+
+# Réputation perdue lorsqu'un joueur attaque un passif
+reputation_loss_attack_passive: 20
+
+# Réputation perdue si un joueur passif tente d'attaquer
+reputation_loss_passive_attacker: 1
+
+# Activer le logging des attaques interdites
+log_passive_attacks: true
+

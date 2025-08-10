@@ -1,0 +1,272 @@
+name: WizardStoneCraft
+version: '0.0.0.69-1.21.5'
+api-version: 1.21
+main: fr.WizardStoneCraft.WizardStoneCraft
+description: 'Plugin complet pour serveur Minecraft 1.21.5, intégrant un système avancé de gestion des joueurs, un anticheat performant, des fonctionnalités robustes de gestion des claims, un système de réputation innovant, un nouveau système de farming optimisé, ainsi que de nombreuses commandes administratives et utilitaires. Conçu pour offrir une expérience de jeu immersive, équilibrée et sécurisée, parfaitement adaptée aux besoins des serveurs modernes.'
+author: 'Metal54400 and MetalGames - studio'
+website: https://discord.gg/dxdrw5t88g
+
+depend:
+  - BetterTeams
+  - Duels
+  - TAB
+  - GriefPrevention
+  - LuckPerms
+  - PlaceholderAPI
+  - Vault
+  - voicechat
+  - GravesX
+
+softdepend:
+  - Essentials
+  - Deepstone
+
+
+commands:
+  listops:
+    description: Liste tous les opérateurs, avec statut en ligne/hors ligne
+    usage: /listops
+    permission: wizardstonecraft.listop
+
+  staffmode:
+    description: Active le mode staff
+    usage: /staffmode
+    permission: wizardstonecraft.moderator
+
+  testrep:
+    description: Test des paliers de réputation
+    permission: wizardstonecraft.testrep
+  clearlagg:
+    description: Commandes ClearLagg
+    usage: /clearlagg <lagg|clear>
+    permission: wizardstonecraft.clearlagg
+
+  passifgui:
+    description: Ouvre le menu du mode passif
+    usage: /passifgui
+
+  job:
+    description: Gère les métiers des joueurs.
+    usage: /job <join|leave|info>
+    permission: wizardstonecraft.job.use
+    permission-message: Vous n'avez pas la permission d'utiliser cette commande.
+
+  placeholders:
+    description: Affiche tous les placeholders WizardStoneCraft
+    usage: /Wizard-placeholders
+    permission: op
+    permission-message: Vous devez être opérateur pour utiliser cette commande.
+
+  claimgive:
+    description: Donne un montant de claim à un joueur
+    usage: /claimgive <joueur> <montant>
+
+  restartplugin:
+    description: Redémarre WizardStoneCraft
+    usage: /restartplugin
+    permission: wizardstonecraft.restart
+
+  menueggcustom:
+    usage: /menueggcustom
+    permission: WizardStoneCraft.modo
+
+  t:
+    description: Envoie un message aux joueurs proches.
+    usage: /t <message>
+
+  gemsreconvert:
+    description: Reconvertir vos gems en monnaie
+    usage: /gemsreconvert
+
+  dailyquestselection:
+    description: Sélectionne la quête quotidienne
+    usage: /dailyquestselection <clé_de_quête>
+    permission: WizardStoneCraft.admin
+
+  dailyquestfinish:
+    description: Termine la quête quotidienne
+    permission: WizardStoneCraft.admin
+
+  dailyquest:
+    description: Réclame ta quête quotidienne
+
+  gemshop:
+    description: Ouvrir la boutique des gems
+
+  gems:
+    description: Voir les gems d’un joueur
+
+  gemadd:
+    description: Ajouter des gems à un joueur
+    permission: gems.add
+
+  gemstop:
+    description: Voir le classement des gems
+
+  repremove:
+    description: Retirer des points de réputation à un joueur.
+    usage: /repremove <player> <amount>
+    aliases: [reputationremove]
+    permission: wizardstonecraft.repadd
+
+  givejukebox:
+    description: Donne un jukebox personnalisé
+    usage: /givejukebox
+
+  topluck:
+    description: Affiche les joueurs les plus chanceux
+    usage: /topluck
+    permission: anticheat.modo
+
+  elytra:
+    description: Active ou désactive les élytres dans l'End
+    usage: /elytra <activer|désactiver>
+    permission: op
+
+  claimlist:
+    description: Ouvre le menu de liste de claims
+    permission: claimlist
+
+  claimrename:
+    description: Renomme un claim
+    permission: claimrename
+
+  anticheatmenu:
+    description: Ouvre le menu Anti-Cheat
+    permission: anticheat.menu
+
+  cook:
+    description: Dé-mute un joueur
+    usage: /cook
+    permission: wizardstonecraft.cook
+
+  claimmeteo:
+    description: Change la météo du claim
+    usage: /claimmeteo
+    permission: wizardstonecraft.Claimoffspawnmob
+
+  tradeclaim:
+    description: Active le trade dans les claims
+    usage: /tradeclaim
+    permission: wizardstonecraft.Claimoffspawnmob
+
+  Claimoffspawnmob:
+    description: Active le spawn des mobs dans les claims
+    usage: /Claimoffspawnmob
+    permission: wizardstonecraft.Claimoffspawnmob
+
+  repunmute:
+    description: Unmute un joueur
+    usage: /repunmute <joueur>
+    permission: wizardstonecraft.unmute
+
+  repmute:
+    description: Mute un joueur
+    usage: /repmute <joueur>
+    permission: wizardstonecraft.mute
+
+  passifset:
+    description: Active le mode passif
+    permission: passif.manage
+
+  passifunset:
+    description: Désactive le mode passif
+    permission: passif.manage
+
+  repspawnnpc:
+    description: Invoque un NPC Pacificateur
+    usage: /repspawnnpc
+    permission: wizardstonecraft.repspawnnpc
+
+  broadcast:
+    description: Envoie un message global
+    usage: /broadcast
+    permission: wizardstonecraft.broadcast
+
+  repreload:
+    description: Recharge la configuration de la réputation
+    usage: /repreload
+    aliases: [reputationreload]
+    permission: wizardstonecraft.repreload
+
+  repadd:
+    description: Ajouter de la réputation
+    usage: /repadd <player> <amount>
+    aliases: [reputationadd]
+    permission: wizardstonecraft.repadd
+
+  reptop:
+    description: Affiche le top réputation
+    usage: /reptop
+    aliases: [reputationtop]
+
+  rep:
+    description: Affiche la réputation d’un joueur
+    usage: /rep <player>
+    aliases: [reputation]
+
+  rephelp:
+    description: Aide sur les commandes de réputation
+    usage: /rephelp
+    aliases: [help, aide]
+
+permissions:
+  wizardstonecraft.listop:
+    default: op
+  wizardstonecraft.moderator:
+    default: op
+
+  WizardStoneCraft.testrep:
+    default: op
+
+  WizardStoneCraft.clearlagg:
+    default: op
+
+  wizardstonecraft.job.use:
+    description: Permission d’utiliser la commande /job
+    default: true  # par défaut accessible à tous les joueurs, change selon besoin
+
+  wizardstonecraft.broadcast:
+    default: op
+
+  wizardstonecraft.repspawnnpc:
+    default: op
+
+  passif.manage:
+    default: op
+
+  wizardstonecraft.repunmute:
+    default: op
+
+  wizardstonecraft.repmute:
+    default: op
+
+  wizardstonecraft.repreload:
+    default: op
+
+  wizardstonecraft.repadd:
+    default: op
+
+  wizardstonecraft.rep:
+    default: op
+
+  wizardstonecraft.help:
+    default: op
+
+  wizardstonecraft.rephighlight:
+    default: op
+
+  wizardstonecraft.affairenpc:
+    default: op
+
+  wizardstonecraft.Claimoffspawnmob:
+    default: op
+
+  wizardstonecraft.cook:
+    default: op
+
+  wizardstonecraft.anticheat.modo:
+    default: op
+
+  wizardstonecraft.anticheat.bypass:
+    default: op

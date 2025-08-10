@@ -1,0 +1,10 @@
+[
+  {
+    "uuid": "e5fd6b2a-8c6d-3d16-8fea-29bcfb9dd903",
+    "name": "metal54400",
+    "created": "2025-06-21 17:24:35 +0200",
+    "source": "Console",
+    "expires": "forever",
+    "reason": "KillAura (Dégâts anormaux \u003e 20)"
+  }
+]

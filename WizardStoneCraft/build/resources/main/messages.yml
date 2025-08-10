@@ -1,0 +1,22 @@
+# messages.yml
+reputation_lost: "&7[&e?&7] Vous avez perdu &c%points% point &7de réputation pour avoir tué un joueur §7[§c!§7]/"
+reputation_lost24h: "&7[&e?&7] Vous avez perdu %points% point de réputation pour avoir tué la même personne en moins de 24 heures §7[§c!§7]"
+reputation_gained: "&7[&e?&7] Vous avez gagné &a2 points de réputation pour votre connexion quotidienne."
+no_permission: "&7[&e?&7] &cVous n'avez pas la permission d'utiliser cette commande."
+player_not_found: "&7[&e?&7] &cJoueur introuvable §7[§c!§7]"
+usage: "&7[&e?&7] Usage: &7/%command% <player> <amount>"
+reputation_status: "§e[§e!§e] §8Aide des Symbole de la reputation §7[§c!§7]: %liste% &7[&e?&7] %player% a %reputation% points de réputation. Statut: %rep%"
+top_reputations: "&7[&e?&7] Top 5 des réputations:"
+ban_message: "&f[&cBanni&f]&7 Vous étais banni 15 Jour Acause de Votre Reputation §7[§c!§7]"
+rep_modified: "&7[&e?&7] Modifié la réputation de %player% de %amount% points. §7[§c!§7]"
+messages:
+  reload_success: "§7[§e?§7] Configuration et messages rechargés avec succès §7[§c!§7]"
+  noperm: "§7[§e?§7] §cVous n'avez pas la permission d'utiliser cette commande §7[§c!§7] "
+  invalid_number: "Veuillez entrer un nombre valide."
+  auto_ban_message: "Vous avez été banni pour une réputation trop basse §7[§c!§7] (15 jours)"
+  ban_reason: "Réputation inférieure à -120 (banni 15 jours)"
+  auto_mute_message: "%player% a été auto-mute pour une mauvaise réputation (5 jours). §7[§c!§7]"
+  chat_muted: "Vous êtes mute à cause de votre mauvaise réputation. Vous serez débloqué automatiquement dans 5 jours. §7[§c!§7]"
+
+
+

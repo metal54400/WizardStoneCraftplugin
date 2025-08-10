@@ -1,0 +1,19 @@
+shop:
+  trident_legendaire:
+    material: TRIDENT
+    name: "§bTrident légendaire"
+    lore:
+      - "§7Un trident antique et puissant."
+      - "§7Prix: §e100 gems"
+    price: 100
+
+  casque_de_feu:
+    material: NETHERITE_HELMET
+    name: "§cCasque de feu"
+    lore:
+      - "§7Protège des flammes."
+      - "§7Prix: §e80 gems"
+    price: 80
+    enchantments:
+      PROTECTION_FIRE: 4
+      DURABILITY: 3
