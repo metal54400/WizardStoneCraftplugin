@@ -1,6 +1,8 @@
 package fr.WizardStoneCraft.API.Dependency;
 
 import com.earth2me.essentials.Essentials;
+import fr.skytasul.quests.BeautyQuests;
+import fr.skytasul.quests.api.QuestsAPI;
 import net.luckperms.api.LuckPerms;
 
 import net.milkbowl.vault.economy.Economy;
@@ -25,6 +27,7 @@ public class DependencyManager {
     private Economy economy;
     private GriefPrevention griefPrevention;
     private TabAPI tab;
+    private BeautyQuests beautyQuests;
 
     public DependencyManager(Plugin plugin) {
         this.plugin = plugin;
@@ -37,6 +40,26 @@ public class DependencyManager {
         setupGriefPrevention();
         setupTAB();
         setupEssentialsX();
+        setupBeautyQuests();
+    }
+
+
+
+    public void setupBeautyQuests() {
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("BeautyQuests");
+        if (plugin instanceof BeautyQuests) {
+            this.beautyQuests = (BeautyQuests) plugin;
+
+            // On peut aussi faire une vérification que l’API est bien initialisée
+            try {
+                QuestsAPI.getAPI().getQuestsManager();
+                logger.info("BeautyQuests détecté et API prête.");
+            } catch (IllegalStateException e) {
+                logger.warning("BeautyQuests détecté mais API pas encore prête.");
+            }
+        } else {
+            logger.warning("BeautyQuests non détecté !");
+        }
     }
 
     private void setupEssentialsX() {
@@ -115,5 +138,8 @@ public class DependencyManager {
 
     public TabAPI getTabAPI() {
         return tab;
+    }
+    public BeautyQuests getBeautyQuests() {
+        return beautyQuests;
     }
 }
