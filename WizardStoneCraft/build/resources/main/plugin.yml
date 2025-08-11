@@ -1,5 +1,5 @@
 name: WizardStoneCraft
-version: '0.0.0.69-1.21.5'
+version: '0.0.0.71-1.21.5'
 api-version: 1.21
 main: fr.WizardStoneCraft.WizardStoneCraft
 description: 'Plugin complet pour serveur Minecraft 1.21.5, intégrant un système avancé de gestion des joueurs, un anticheat performant, des fonctionnalités robustes de gestion des claims, un système de réputation innovant, un nouveau système de farming optimisé, ainsi que de nombreuses commandes administratives et utilitaires. Conçu pour offrir une expérience de jeu immersive, équilibrée et sécurisée, parfaitement adaptée aux besoins des serveurs modernes.'
@@ -20,6 +20,7 @@ depend:
 softdepend:
   - Essentials
   - Deepstone
+  - BeautyQuest
 
 
 commands:
@@ -77,18 +78,6 @@ commands:
   gemsreconvert:
     description: Reconvertir vos gems en monnaie
     usage: /gemsreconvert
-
-  dailyquestselection:
-    description: Sélectionne la quête quotidienne
-    usage: /dailyquestselection <clé_de_quête>
-    permission: WizardStoneCraft.admin
-
-  dailyquestfinish:
-    description: Termine la quête quotidienne
-    permission: WizardStoneCraft.admin
-
-  dailyquest:
-    description: Réclame ta quête quotidienne
 
   gemshop:
     description: Ouvrir la boutique des gems

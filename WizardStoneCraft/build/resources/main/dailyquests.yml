@@ -1,0 +1,95 @@
+# Liste fixe des 10 quêtes répétables disponibles chaque jour
+quests:
+  - id: 21
+    name: "daily_21_farming"
+    description: "Récolter des blés"
+    rewards:
+      reputation: 5
+      xp_levels: 10
+      claim_blocks: 1500
+      money_min: 20
+      money_max: 50
+  - id: 23
+    name: "daily_23_mining"
+    description: "Miner du diamant"
+    rewards:
+      reputation: 5
+      xp_levels: 10
+      claim_blocks: 1500
+      money_min: 20
+      money_max: 50
+  - id: 26
+    name: "daily_26_cooking"
+    description: "Cuisiner de la viande"
+    rewards:
+      reputation: 5
+      xp_levels: 10
+      claim_blocks: 1500
+      money_min: 20
+      money_max: 50
+  - id: 30
+    name: "daily_30_planting"
+    description: "Planter des carottes"
+    rewards:
+      reputation: 5
+      xp_levels: 10
+      claim_blocks: 1500
+      money_min: 20
+      money_max: 50
+  - id: 35
+    name: "daily_35_eating"
+    description: "Manger des pommes"
+    rewards:
+      reputation: 5
+      xp_levels: 10
+      claim_blocks: 1500
+      money_min: 20
+      money_max: 50
+  - id: 40
+    name: "daily_40_pvp"
+    description: "Gagner un duel PvP"
+    rewards:
+      reputation: 5
+      xp_levels: 10
+      claim_blocks: 1500
+      money_min: 20
+      money_max: 50
+  - id: 52
+    name: "daily_52_boss"
+    description: "Vaincre un boss dur"
+    rewards:
+      reputation: 5
+      xp_levels: 10
+      claim_blocks: 1500
+      money_min: 50
+      money_max: 100
+  - id: 60
+    name: "daily_60_mob_hunt"
+    description: "Tuer 20 mobs rares"
+    rewards:
+      reputation: 5
+      xp_levels: 10
+      claim_blocks: 1500
+      money_min: 50
+      money_max: 100
+  - id: 70
+    name: "daily_70_exploration"
+    description: "Explorer un biome"
+    rewards:
+      reputation: 5
+      xp_levels: 10
+      claim_blocks: 1500
+      money_min: 50
+      money_max: 100
+  - id: 85
+    name: "daily_85_special"
+    description: "Quête spéciale difficile"
+    rewards:
+      reputation: 5
+      xp_levels: 10
+      claim_blocks: 1500
+      money_min: 50
+      money_max: 100
+
+# Joueurs et leur quête du jour seront stockés dans ce fichier automatiquement
+players: {}

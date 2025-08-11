@@ -13,6 +13,7 @@ import dev.cwhead.GravesX.GravesXAPI;
 import fr.DeepStone.WizardStoneCraft.CommandManager;
 import fr.DeepStone.WizardStoneCraft.Deepstone;
 import fr.WizardStoneCraft.API.Dependency.DependencyManager;
+import fr.WizardStoneCraft.API.Item.NBTCleanerListener;
 import fr.WizardStoneCraft.API.Item.QuestItemCheckEvent;
 import fr.WizardStoneCraft.API.Scheduler.ReputationScheduler;
 import fr.WizardStoneCraft.Commands.*;
@@ -300,6 +301,7 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(),this);
         Bukkit.getPluginManager().registerEvents(new RepuListener(this), this);
         Bukkit.getPluginManager().registerEvents(new ShulkerShellDropListener() ,this);
+        Bukkit.getPluginManager().registerEvents(new NBTCleanerListener() ,this);
         Bukkit.getPluginManager().registerEvents(new StaffModeListener(staffModeManager,this),this);
 
         //Register Commande
