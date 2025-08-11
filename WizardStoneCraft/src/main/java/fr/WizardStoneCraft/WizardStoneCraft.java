@@ -348,7 +348,10 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getLogger().info("§7[§e?§7]§a WizardStoneCraft est activé !");
 
 
-
+        getServer().getScheduler().runTaskLater(this, () -> {
+            dailyQuestManager = new DailyQuestManager(this);
+            // Ou dailyQuestManager.loadFixedDailyQuests();
+        }, 1L);  // 1 tick plus tard
 
     }
 

@@ -1,5 +1,5 @@
 name: WizardStoneCraft
-version: '0.0.0.72-1.21.5'
+version: '0.0.0.73-1.21.5'
 api-version: 1.21
 main: fr.WizardStoneCraft.WizardStoneCraft
 description: 'Plugin complet pour serveur Minecraft 1.21.5, intégrant un système avancé de gestion des joueurs, un anticheat performant, des fonctionnalités robustes de gestion des claims, un système de réputation innovant, un nouveau système de farming optimisé, ainsi que de nombreuses commandes administratives et utilitaires. Conçu pour offrir une expérience de jeu immersive, équilibrée et sécurisée, parfaitement adaptée aux besoins des serveurs modernes.'
