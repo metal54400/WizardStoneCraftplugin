@@ -1,8 +1,10 @@
 package fr.WizardStoneCraft.data;
 
 import org.bukkit.Material;
-import java.util.EnumSet;
 import org.bukkit.entity.EntityType;
+
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Set;
 
 public enum QuestType {
@@ -14,8 +16,9 @@ public enum QuestType {
     BOSS_TRIO(EnumSet.of(EntityType.ENDER_DRAGON, EntityType.WITHER, EntityType.ELDER_GUARDIAN)),
     SPECIFIC_BOSS(EnumSet.of(EntityType.WITHER)),
     VILLAGERZOMBIE(EnumSet.of(EntityType.ZOMBIE_VILLAGER)),
-    BREZZE(EnumSet.of(EntityType.BREEZE)),// Exemple : quête ciblée sur le Wither
-    PVP_DUEL(EnumSet.noneOf(EntityType.class)); // PvP = aucun mob ciblé
+    BREZZE(EnumSet.of(EntityType.BREEZE)), // Exemple
+    PVP_DUEL(Collections.emptySet()),      // PvP = aucun mob ciblé
+    CUSTOM(Collections.emptySet());        // Type générique pour quêtes personnalisées
 
     private final Set<?> targets;
 
@@ -23,19 +26,43 @@ public enum QuestType {
         this.targets = targets;
     }
 
-    public Set<?> getTargets() {
-        return targets;
+    /**
+     * Récupère les cibles de type Material si pertinentes,
+     * sinon renvoie un Set vide.
+     */
+    public Set<Material> getMaterialTargets() {
+        if (!targets.isEmpty() && targets.iterator().next() instanceof Material) {
+            @SuppressWarnings("unchecked")
+            Set<Material> materials = (Set<Material>) targets;
+            return materials;
+        }
+        return Collections.emptySet();
     }
 
-    // Méthode utilitaire pour vérifier si une entité valide la quête
+    /**
+     * Récupère les cibles de type EntityType si pertinentes,
+     * sinon renvoie un Set vide.
+     */
+    public Set<EntityType> getEntityTargets() {
+        if (!targets.isEmpty() && targets.iterator().next() instanceof EntityType) {
+            @SuppressWarnings("unchecked")
+            Set<EntityType> entities = (Set<EntityType>) targets;
+            return entities;
+        }
+        return Collections.emptySet();
+    }
+
+    /**
+     * Vérifie si l'entité passée est une cible valide pour cette quête.
+     */
     public boolean isEntityTarget(EntityType entityType) {
-        return targets.contains(entityType);
+        return getEntityTargets().contains(entityType);
     }
 
-    // Méthode utilitaire pour vérifier si un item ou un bloc valide la quête
+    /**
+     * Vérifie si le matériau passé est une cible valide pour cette quête.
+     */
     public boolean isMaterialTarget(Material material) {
-        return targets.contains(material);
+        return getMaterialTargets().contains(material);
     }
-
 }
-

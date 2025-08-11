@@ -13,6 +13,7 @@ import dev.cwhead.GravesX.GravesXAPI;
 import fr.DeepStone.WizardStoneCraft.CommandManager;
 import fr.DeepStone.WizardStoneCraft.Deepstone;
 import fr.WizardStoneCraft.API.Dependency.DependencyManager;
+import fr.WizardStoneCraft.API.Item.QuestItemCheckEvent;
 import fr.WizardStoneCraft.API.Scheduler.ReputationScheduler;
 import fr.WizardStoneCraft.Commands.*;
 import fr.WizardStoneCraft.Commands.Anticheat.AntiCheatMenuCommand;
@@ -88,6 +89,7 @@ import java.time.LocalDate;
 import java.util.*;
 
 
+import static fr.WizardStoneCraft.API.Item.NBTCleanerListener.cleanItemNBT;
 import static fr.WizardStoneCraft.Commands.PassiveCommand.passivePlayers;
 import static org.bukkit.Bukkit.getPlayer;
 
@@ -303,11 +305,8 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         //Register Commande
         getCommand("clearlagg").setExecutor(new ClearLaggCommand(this));
         getCommand("placeholders").setExecutor(new PlaceholdersCommand());
-        getCommand("dailyquestselection").setExecutor(new DailyQuestManager(this));
         getCommand("job").setExecutor(new JobCommand(this));
         getCommand("t").setExecutor(new ProximityChatCommand());
-        getCommand("dailyquestfinish").setExecutor(new DailyQuestManager(this));
-        getCommand("dailyquest").setExecutor(new DailyQuestManager(this));
         getCommand("gemshop").setExecutor(new GemShopCommand(shopManager));
         getCommand("gems").setExecutor(new GemCommand(gemManager, economy));
         getCommand("gemsreconvert").setExecutor(new GemCommand(gemManager, economy));
@@ -346,6 +345,22 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
         getLogger().info("Anti-Cheat Menu activé !");
         getLogger().info("§7[§e?§7]§a WizardStoneCraft est activé !");
 
+
+
+
+    }
+
+    public boolean checkItem(Player player, ItemStack item) {
+        // Ici ta logique pour définir si l'item est valide ou non
+        boolean valid = true; // Par défaut true, à adapter selon ta logique
+
+        QuestItemCheckEvent event = new QuestItemCheckEvent(player, item, valid);
+        Bukkit.getPluginManager().callEvent(event);
+
+        item = event.getItem();
+        valid = event.isValid();
+
+        return valid;
     }
 
     @Override
@@ -367,7 +382,11 @@ public class WizardStoneCraft extends JavaPlugin implements TabExecutor,Listener
             }
         }, 0L, 20L * 30); // 20 ticks * 30 = toutes les 30 secondes
     }
-
+    @EventHandler
+    public void onQuestItemCheck(QuestItemCheckEvent event) {
+        ItemStack cleaned = cleanItemNBT(event.getItem());
+        event.setItem(cleaned);
+    }
 
 
     private void loadTopLuckConfig() {
