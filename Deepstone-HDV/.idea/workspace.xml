@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="1fae1b20-4f10-4a3d-bc17-73d8b807c451" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../WizardStoneCraft/libs/Themis_0.17.6.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/CalendrierCommand.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/UnmuteCommand.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Enum/Entitytypes.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/Agrisculture/DynamicCropGrowthListener.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/HappyGhastPetManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/Nerf/BamboNerf.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/OnMobTeleportListener.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/ZombieVillagerBoost.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/checksums/checksums.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/checksums/md5-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/checksums/md5-checksums.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/checksums/sha1-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/checksums/sha1-checksums.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/executionHistory/executionHistory.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/executionHistory/executionHistory.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/fileHashes/fileHashes.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/fileHashes/fileHashes.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/fileHashes/resourceHashesCache.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/8.8/fileHashes/resourceHashesCache.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/.gradle/file-system.probe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/build/classes/java/main/fr/DeepStone/WizardStoneCraft/DragonRewardListener.class" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/build/classes/java/main/fr/DeepStone/WizardStoneCraft/DragonRewardListener.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/build/resources/main/plugin.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/build/resources/main/plugin.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/build/tmp/compileJava/compileTransaction/stash-dir/DataManager.class.uniqueId2" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/build/tmp/compileJava/compileTransaction/stash-dir/Deepstone.class.uniqueId1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/build/tmp/compileJava/previous-compilation-data.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/build/tmp/compileJava/previous-compilation-data.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Deepstone/src/main/java/fr/DeepStone/WizardStoneCraft/DragonRewardListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/../Deepstone/src/main/java/fr/DeepStone/WizardStoneCraft/DragonRewardListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/checksums/checksums.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/checksums/md5-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/checksums/md5-checksums.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/checksums/sha1-checksums.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/checksums/sha1-checksums.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/executionHistory/executionHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/executionHistory/executionHistory.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/executionHistory/executionHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/executionHistory/executionHistory.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/fileHashes/fileHashes.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/fileHashes/fileHashes.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/fileHashes/resourceHashesCache.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/8.8/fileHashes/resourceHashesCache.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/.gradle/file-system.probe" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/API/Discord/CommandDiscordListener/DiscordBalanceListener.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/API/Discord/CommandDiscordListener/DiscordBalanceListener.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/API/Discord/DiscordStats.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/API/Discord/DiscordStats.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Commands/PassiveCommand.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Commands/PassiveCommand.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Commands/Reputation/ManageRepCommand.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Commands/Reputation/ManageRepCommand.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Commands/Reputation/RepReloadCommand.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Commands/Reputation/RepReloadCommand.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Commands/Reputation/ReptopCommand.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Commands/Reputation/ReptopCommand.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Commands/Reputation/testrep.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Commands/Reputation/testrep.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Enum/BundleSession.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/CombatLogListener.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/CreativeItemLoreListener.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/CreativeItemLoreListener.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/PassiveModeGUI.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/PassiveModeGUI.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/PlayerDeathListener.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/PlayerDeathListener.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/PvpListener$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/PvpListener$PvPTimerData.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/PvpListener.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/VoicechatMuteListener.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/VoicechatMuteListener.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/réputation/ChatListener.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/réputation/RepuListener.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Listener/réputation/RéputationListener.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Manager/ReputationManager.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/Manager/ReputationManager.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$2.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$3.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$Jukeboxmod.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$Jukeboxmod.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$egg.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$egg.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$endelytra.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft$endelytra.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft.class" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/classes/java/main/fr/WizardStoneCraft/WizardStoneCraft.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/resources/main/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/resources/main/config.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/resources/main/plugin.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/resources/main/plugin.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/ChatListener.class.uniqueId14" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/ClaimTransferPlugin$1.class.uniqueId15" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/ClaimTransferPlugin$ClaimOffer.class.uniqueId8" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/ClearLaggCommand.class.uniqueId10" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/CombatLogListener.class.uniqueId6" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/PassiveCommand.class.uniqueId7" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/ProximityChatCommand.class.uniqueId48" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/PvpListener$1.class.uniqueId9" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/RepuListener.class.uniqueId12" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/ReputationManager.class.uniqueId11" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/RestartCommand.class.uniqueId47" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/WizardStoneCraft$1.class.uniqueId0" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/WizardStoneCraft$2.class.uniqueId13" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/compileTransaction/stash-dir/WizardStoneCraft.class.uniqueId1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/previous-compilation-data.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/build/tmp/compileJava/previous-compilation-data.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/API/Discord/CommandDiscordListener/DiscordBalanceListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/API/Discord/CommandDiscordListener/DiscordBalanceListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/API/Discord/DiscordStats.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/API/Discord/DiscordStats.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/PassiveCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/PassiveCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/Reputation/ManageRepCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/Reputation/ManageRepCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/Reputation/RepReloadCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/Reputation/RepReloadCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/Reputation/ReptopCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/Reputation/ReptopCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/Reputation/testrep.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Commands/Reputation/testrep.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Enum/BundleSession.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/CombatLogListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/PVP/CombatLogListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/CreativeItemLoreListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/CreativeItemLoreListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/PassiveModeGUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/PassiveModeGUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/PlayerDeathListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/PlayerDeathListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/PvpListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/PVP/PvpListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/VoicechatMuteListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/VoicechatMuteListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/réputation/ChatListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/PVP/réputation/ChatListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/réputation/RepuListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/PVP/réputation/RepuListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/réputation/RéputationListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Listener/PVP/réputation/RéputationListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Manager/ReputationManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/Manager/ReputationManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/WizardStoneCraft.java" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/java/fr/WizardStoneCraft/WizardStoneCraft.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/resources/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/resources/config.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../WizardStoneCraft/src/main/resources/plugin.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../WizardStoneCraft/src/main/resources/plugin.yml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "metal54400"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/metal54400/WizardStoneCraftplugin.git",
+    "accountId": "f20cd597-2573-49e5-96d7-69423ac40c87"
+  }
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 2
+}]]></component>
+  <component name="ProjectId" id="32JrqDZxwkgcfE9tCbUoyv6C5xC" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "Main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/audec/IdeaProjects/fr.metalGames/Deepstone-HDV"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1fae1b20-4f10-4a3d-bc17-73d8b807c451" name="Changes" comment="" />
+      <created>1757149704810</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1757149704810</updated>
+    </task>
+    <servers />
+  </component>
+</project>
